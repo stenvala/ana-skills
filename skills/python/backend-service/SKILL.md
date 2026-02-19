@@ -59,5 +59,3 @@ cd src && uv run python -c "from shared.services.<domain>.<feature>_service impo
 See `references/` folder for:
 - `base-infrastructure.md` - **Start here for fresh projects**: MinimalUser, logger, audit models
 - `service-template.md` - Complete service implementation pattern
-
-

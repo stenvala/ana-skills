@@ -56,5 +56,3 @@ uv run python -c "from shared.db.repositories.<domain>_repository.<table_name>_r
 See `references/` folder for:
 - `repository-template.md` - Basic repository structure
 - `query-patterns.md` - Common query patterns
-
-

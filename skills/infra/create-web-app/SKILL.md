@@ -223,4 +223,3 @@ See reference files for detailed templates:
 - `references/scripts-setup.md` - Python development scripts
 - `references/pyproject-setup.md` - Python project configuration
 - `references/after-api-change-setup.md` - OpenAPI to TypeScript generator
-

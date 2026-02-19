@@ -67,5 +67,3 @@ See `references/` folder for:
 - `model-template.md` - Basic model structure
 - `enum-template.md` - Enum class patterns
 - `jsonb-pattern.md` - JSONB field handling
-
-

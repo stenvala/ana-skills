@@ -110,5 +110,3 @@ After setup:
 ## Templates
 
 See `references/postgres-setup.md` for complete setup_db.py template.
-
-

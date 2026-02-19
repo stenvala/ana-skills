@@ -258,5 +258,3 @@ See `references/` folder for:
 - `signal-form-dialog-template.md` - Dialog form pattern (Pattern 1)
 - `signal-form-component-template.md` - Route component form patterns (Pattern 4, 5, 6)
 - `signal-form-patterns.md` - Validation, button styling, and valueChanges replacement patterns
-
-

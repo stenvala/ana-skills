@@ -99,5 +99,3 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 # Backend
 cd src && uv run python -c "from api.main import app; print('OK')"
 ```
-
-

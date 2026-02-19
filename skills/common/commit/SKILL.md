@@ -73,5 +73,3 @@ Present the suggested message and ask for approval:
 - **Approve** - Proceed with commit
 - **Modify** - Change the message
 - **Discard** - Cancel and make different changes
-
-

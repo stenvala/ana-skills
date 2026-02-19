@@ -210,5 +210,3 @@ Template provides:
 - Environment variables (ENV_TYPE, LOG_ROOT)
 - Auto-restart on failure
 - 10 second restart delay
-
-

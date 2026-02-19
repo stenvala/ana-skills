@@ -149,5 +149,3 @@ uv run run_tests.py quality
 See `references/` folder for:
 
 - `unit-test-patterns.md` - Unit test examples for services, repos, routers
-
-

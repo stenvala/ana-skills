@@ -85,5 +85,3 @@ See `references/` folder for:
 - `base-infrastructure.md` - Base page class, conftest fixtures, utilities
 - `page-object-template.md` - Page object class patterns
 - `test-template.md` - Test file structure and patterns
-
-

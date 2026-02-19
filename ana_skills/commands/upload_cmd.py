@@ -22,6 +22,22 @@ from ana_skills.resources import (
 console = Console()
 
 
+def _normalize_markdown_ending(content: str) -> str:
+    """Ensure markdown file ends with exactly one newline.
+
+    Raises AssertionError if the file has more than one trailing newline.
+    """
+    # Remove all trailing whitespace
+    content = content.rstrip('\n')
+    # Add exactly one newline
+    normalized = content + '\n'
+
+    # Assert that we didn't have multiple trailing newlines
+    assert not content.endswith('\n'), "Markdown file has multiple trailing newlines"
+
+    return normalized
+
+
 def _list_project_skills(project_root: Path, framework: AgentFramework) -> list[str]:
     """List all skill names found in the project's agent skills directory."""
     skill_base = project_root / AGENT_SKILL_PATHS[framework]
@@ -58,6 +74,7 @@ def _upload_skill(
         dest_dir.mkdir(parents=True, exist_ok=True)
         # For Cursor, strip the extra globs/alwaysApply from frontmatter
         content = src_file.read_text(encoding="utf-8")
+        content = _normalize_markdown_ending(content)
         (dest_dir / "SKILL.md").write_text(content, encoding="utf-8")
     else:
         # Claude and Copilot use directories
@@ -72,9 +89,9 @@ def _upload_skill(
         # Copy SKILL.md
         src_md = src_dir / "SKILL.md"
         if src_md.exists():
-            (dest_dir / "SKILL.md").write_text(
-                src_md.read_text(encoding="utf-8"), encoding="utf-8"
-            )
+            content = src_md.read_text(encoding="utf-8")
+            content = _normalize_markdown_ending(content)
+            (dest_dir / "SKILL.md").write_text(content, encoding="utf-8")
 
         # Copy subdirectories (references/, scripts/)
         for subdir_name in ("references", "scripts"):

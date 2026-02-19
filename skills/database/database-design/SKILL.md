@@ -63,5 +63,3 @@ After design is complete:
 2. Verify all fields have types and constraints
 3. Ensure enums have clear descriptions
 4. Confirm business rules are documented
-
-

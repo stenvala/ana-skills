@@ -93,5 +93,3 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 See `references/` folder for:
 
 - `dialog-template.md` - Dialog component pattern with forms
-
-

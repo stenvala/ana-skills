@@ -160,5 +160,3 @@ uv run setup_db.py local-update
 - Use format: `NNN_description.sql` (e.g., `001_add_document_reference_number.sql`)
 - Use suffixes for related migrations: `008_..., 008b_..., 008c_...`
 - Always include header comment with purpose/feature reference
-
-

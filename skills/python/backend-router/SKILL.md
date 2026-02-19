@@ -125,5 +125,3 @@ See `references/` folder for:
 - `base-infrastructure.md` - **Start here for fresh projects**: BaseDTO, common DTOs, base model mixin
 - `dto-template.md` - DTO patterns with Field() validation
 - `router-template.md` - Complete router implementation
-
-

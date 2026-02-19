@@ -170,5 +170,3 @@ value1,value2"""
 See `references/` folder for:
 
 - `integration-test-example.py` - Complete integration test example
-
-

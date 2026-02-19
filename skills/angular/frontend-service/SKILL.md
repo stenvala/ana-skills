@@ -55,5 +55,3 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 ## Templates
 
 See `references/service-template.md` for the complete reference implementation.
-
-

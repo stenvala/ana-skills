@@ -59,5 +59,3 @@ See `references/schema-examples.md` for examples of:
 - Adding columns to existing tables
 - Creating indexes
 - Adding migration support
-
-

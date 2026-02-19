@@ -337,5 +337,3 @@ See `references/` folder for:
 - `shared-component-template.md` - Shared component pattern (no SharedModule import)
 - `view-template.md` - HTML template patterns
 - `routing-template.md` - Route configuration
-
-
