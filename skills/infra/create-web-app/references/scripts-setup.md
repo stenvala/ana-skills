@@ -234,14 +234,14 @@ Create `run_tests.py` in project root:
 ```python
 #!/usr/bin/env python3
 """
-Test runner for <PROJECT_NAME>.
+Centralized test runner for the <PROJECT_NAME> project.
 Coordinates Python tests and code quality checks.
 """
 
 import os
 import subprocess
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import typer
 
@@ -252,86 +252,343 @@ class TestRunner:
     def __init__(self, verbose: bool = False):
         self.verbose = verbose
         self.project_root = Path(__file__).parent
-        self.failed_suites: List[str] = []
+        self.src_dir = self.project_root / "src"
+        self.failed_suites: list[str] = []
+
+    def log(self, message: str) -> None:
+        """Print log message."""
+        typer.echo(message)
 
     def log_header(self, message: str) -> None:
         """Print section header."""
         separator = "=" * len(message)
-        typer.echo(f"\n{separator}", color="cyan")
-        typer.echo(f"{message}", color="cyan")
-        typer.echo(f"{separator}", color="cyan")
+        typer.echo(f"\n{separator}")
+        typer.echo(f"{message}")
+        typer.echo(f"{separator}")
 
     def run_command(
         self,
-        command: List[str],
+        command: list[str],
         cwd: Optional[Path] = None,
         description: str = "",
-        env: Optional[dict] = None,
-    ) -> Tuple[bool, str]:
+        env: Optional[dict[str, str]] = None,
+    ) -> tuple[bool, str]:
         """Run a command and return success status and output."""
         if self.verbose:
-            typer.echo(f"Running: {' '.join(command)}", color="yellow")
+            typer.echo(f"Running: {' '.join(command)}")
 
         try:
+            # Merge environment variables
             run_env = os.environ.copy()
             if env:
                 run_env.update(env)
 
-            result = subprocess.run(
-                command,
-                cwd=cwd or self.project_root,
-                capture_output=not self.verbose,
-                text=True,
-                check=False,
-                env=run_env,
-            )
-
-            if result.returncode == 0:
-                if not self.verbose and result.stdout and result.stdout.strip():
-                    typer.echo(result.stdout.strip())
-                typer.echo(f"✅ {description or 'Command'} passed", color="green")
-                return True, result.stdout if hasattr(result, 'stdout') else ""
+            if self.verbose:
+                # In verbose mode, let output stream directly to terminal
+                result = subprocess.run(
+                    command,
+                    cwd=cwd or self.project_root,
+                    text=True,
+                    check=False,
+                    env=run_env,
+                )
+                if result.returncode == 0:
+                    typer.echo(f"  {description or 'Command'} passed")
+                    return True, ""
+                else:
+                    typer.echo(
+                        f"  {description or 'Command'} failed with exit code: {result.returncode}"
+                    )
+                    return False, ""
             else:
-                if not self.verbose:
+                # In non-verbose mode, capture output
+                result = subprocess.run(
+                    command,
+                    cwd=cwd or self.project_root,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    env=run_env,
+                )
+
+                if result.returncode == 0:
+                    # Show stdout output if available and not empty
+                    if result.stdout and result.stdout.strip():
+                        typer.echo(result.stdout.strip())
+                    typer.echo(f"  {description or 'Command'} passed")
+                    return True, result.stdout
+                else:
+                    # Show both stdout and stderr for failures to get full test output
+                    full_output = ""
                     if result.stdout:
-                        typer.echo(result.stdout)
+                        full_output += result.stdout
                     if result.stderr:
-                        typer.echo(result.stderr, color="red")
-                typer.echo(f"❌ {description or 'Command'} failed", color="red")
-                return False, ""
+                        if full_output:
+                            full_output += "\n"
+                        full_output += result.stderr
+
+                    if full_output:
+                        typer.echo(f"  {description or 'Command'} failed:")
+                        typer.echo(full_output)
+                    else:
+                        typer.echo(
+                            f"  {description or 'Command'} failed with exit code: {result.returncode}"
+                        )
+                    return False, full_output
 
         except FileNotFoundError:
-            typer.echo(f"❌ Command not found: {command[0]}", color="red")
-            return False, ""
+            error_msg = f"Command not found: {command[0]}"
+            typer.echo(f"  {description or 'Command'} failed: {error_msg}")
+            return False, error_msg
         except Exception as e:
-            typer.echo(f"❌ Unexpected error: {str(e)}", color="red")
-            return False, ""
+            error_msg = f"Unexpected error: {str(e)}"
+            typer.echo(f"  {description or 'Command'} failed: {error_msg}")
+            return False, error_msg
 
     def run_ruff_check(self) -> bool:
-        """Run Ruff linting."""
-        src_dir = self.project_root / "src"
+        """Run Ruff linting and import sorting."""
         success, _ = self.run_command(
-            ["uv", "run", "ruff", "check", "."],
-            cwd=src_dir,
-            description="Ruff linting",
+            ["uv", "run", "ruff", "check", ".", "--exclude", "ui"],
+            cwd=self.src_dir,
+            description="Ruff linting and import sorting",
         )
         if not success:
             self.failed_suites.append("Ruff")
         return success
 
-    def run_python_tests(self, file_pattern: Optional[str] = None) -> bool:
-        """Run Python tests."""
-        self.log_header("PYTHON TESTS")
+    def run_ty_check(self) -> bool:
+        """Run ty type checking on src directory."""
+        success, _ = self.run_command(
+            ["uv", "run", "ty", "check"],
+            cwd=self.project_root,
+            description="ty type checking",
+        )
+        if not success:
+            self.failed_suites.append("ty")
+        return success
 
-        command = ["uv", "run", "pytest", "-v"]
+    def run_cyclomatic_complexity(self, max_complexity: int = 10) -> bool:
+        """Run cyclomatic complexity analysis using Ruff's mccabe plugin."""
+        success, _ = self.run_command(
+            [
+                "uv",
+                "run",
+                "ruff",
+                "check",
+                ".",
+                "--select=C901",
+                f"--config=lint.mccabe.max-complexity={max_complexity}",
+                "--exclude=tests",
+                "--exclude=ui",
+            ],
+            cwd=self.src_dir,
+            description="Cyclomatic complexity analysis",
+        )
+        if not success:
+            self.failed_suites.append("Cyclomatic Complexity")
+        return success
+
+    def run_python_quality_checks(self) -> bool:
+        """Run all Python code quality checks."""
+        self.log_header("PYTHON CODE QUALITY CHECKS")
+
+        all_passed = True
+        all_passed &= self.run_ruff_check()
+        all_passed &= self.run_ty_check()
+
+        return all_passed
+
+    def run_unit_tests(
+        self,
+        coverage: bool = False,
+        file_pattern: Optional[str] = None,
+        stop_on_first_failure: bool = False,
+    ) -> bool:
+        """Run Python unit tests (excluding integration tests)."""
+        self.log_header("PYTHON UNIT TESTS")
+
+        command = ["uv", "run", "pytest"]
+
+        if stop_on_first_failure:
+            command.append("-x")
+
+        # Exclude integration and e2e tests
+        command.extend(["-m", "not integration and not e2e"])
+        command.extend(["--ignore=tests/e2e"])
+
+        if file_pattern:
+            command.append(file_pattern)
+        else:
+            # Enable parallel execution with auto-detection of CPU cores
+            command.extend(["-n", "auto"])
+            command.append("tests/")
+
+        if coverage:
+            command.extend(
+                [
+                    "--cov=.",
+                    "--cov-config=../pyproject.toml",
+                    "--cov-report=html:../htmlcov",
+                    "--cov-report=term-missing",
+                    "--cov-branch",
+                    "--cov-fail-under=90",
+                ]
+            )
+
+        # Always use verbose output to show test progress
+        command.append("-v")
+
+        # Add junit output for CI
+        command.extend(["--junit-xml=../pytest-report.xml"])
+
+        success, _ = self.run_command(
+            command, cwd=self.src_dir, description="Python unit tests"
+        )
+
+        if not success:
+            self.failed_suites.append("Python Unit Tests")
+
+        return success
+
+    def run_integration_tests(
+        self,
+        coverage: bool = False,
+        file_pattern: Optional[str] = None,
+        stop_on_first_failure: bool = False,
+    ) -> bool:
+        """Run Python integration tests only."""
+        self.log_header("PYTHON INTEGRATION TESTS")
+
+        command = ["uv", "run", "pytest"]
+
+        if stop_on_first_failure:
+            command.append("-x")
+
+        # Only run integration tests
+        command.extend(["-m", "integration"])
+        command.extend(["--ignore=tests/e2e"])
 
         if file_pattern:
             command.append(file_pattern)
         else:
             command.append("tests/")
 
-        src_dir = self.project_root / "src"
-        success, _ = self.run_command(command, cwd=src_dir, description="Python tests")
+        if coverage:
+            command.extend(
+                [
+                    "--cov=.",
+                    "--cov-config=../pyproject.toml",
+                    "--cov-report=html:../htmlcov",
+                    "--cov-report=term-missing",
+                    "--cov-branch",
+                    "--cov-fail-under=90",
+                ]
+            )
+
+        # Always use verbose output to show test progress
+        command.append("-v")
+
+        # Add junit output for CI
+        command.extend(["--junit-xml=../pytest-integration-report.xml"])
+
+        success, _ = self.run_command(
+            command, cwd=self.src_dir, description="Python integration tests"
+        )
+
+        if not success:
+            self.failed_suites.append("Python Integration Tests")
+
+        return success
+
+    def run_e2e_tests(
+        self,
+        file_pattern: Optional[str] = None,
+        stop_on_first_failure: bool = False,
+        headed: bool = False,
+        debug: bool = False,
+    ) -> bool:
+        """Run E2E browser tests."""
+        self.log_header("E2E BROWSER TESTS")
+
+        command = ["uv", "run", "pytest"]
+
+        if stop_on_first_failure:
+            command.append("-x")
+
+        command.extend(["-m", "e2e"])
+
+        if file_pattern:
+            command.append(file_pattern)
+        else:
+            # Enable parallel execution with auto-detection of CPU cores
+            command.extend(["-n", "auto"])
+            command.append("tests/e2e/")
+
+        command.append("-v")
+        command.extend(["--junit-xml=../pytest-e2e-report.xml"])
+
+        if headed or debug:
+            command.append("--headed")
+
+        env: Optional[dict[str, str]] = None
+        if debug:
+            env = {"PWDEBUG": "1"}
+
+        success, _ = self.run_command(
+            command, cwd=self.src_dir, description="E2E browser tests", env=env
+        )
+
+        if not success:
+            self.failed_suites.append("E2E Browser Tests")
+
+        return success
+
+    def run_all_python_tests(
+        self,
+        coverage: bool = False,
+        file_pattern: Optional[str] = None,
+        stop_on_first_failure: bool = False,
+    ) -> bool:
+        """Run all Python tests (unit + integration)."""
+        self.log_header("PYTHON TESTS (ALL)")
+
+        command = ["uv", "run", "pytest"]
+
+        if stop_on_first_failure:
+            command.append("-x")
+
+        # Exclude e2e tests (run unit + integration only)
+        command.extend(["-m", "not e2e"])
+        command.extend(["--ignore=tests/e2e"])
+
+        if file_pattern:
+            command.append(file_pattern)
+        else:
+            # Enable parallel execution with auto-detection of CPU cores
+            command.extend(["-n", "auto"])
+            command.append("tests/")
+
+        if coverage:
+            command.extend(
+                [
+                    "--cov=.",
+                    "--cov-config=../pyproject.toml",
+                    "--cov-report=html:../htmlcov",
+                    "--cov-report=term-missing",
+                    "--cov-branch",
+                    "--cov-fail-under=90",
+                ]
+            )
+
+        # Always use verbose output to show test progress
+        command.append("-v")
+
+        # Add junit output for CI
+        command.extend(["--junit-xml=../pytest-report.xml"])
+
+        success, _ = self.run_command(
+            command, cwd=self.src_dir, description="Python tests"
+        )
 
         if not success:
             self.failed_suites.append("Python Tests")
@@ -343,24 +600,120 @@ class TestRunner:
         self.log_header("TEST EXECUTION SUMMARY")
 
         if not self.failed_suites:
-            typer.echo("✅ All test suites passed!", color="green")
+            typer.echo("All test suites passed!")
         else:
-            typer.echo(f"❌ {len(self.failed_suites)} test suite(s) failed:", color="red")
+            typer.echo(f"{len(self.failed_suites)} test suite(s) failed:")
             for suite in self.failed_suites:
-                typer.echo(f"   - {suite}", color="red")
+                typer.echo(f"   - {suite}")
+
+        typer.echo("")
 
 
-app = typer.Typer(help="Test runner for <PROJECT_NAME>")
+# Create the Typer app
+app = typer.Typer(help="Centralized test runner for <PROJECT_NAME> project")
+
+
+@app.command()
+def unit(
+    coverage: bool = typer.Option(
+        False, "--coverage", "-c", help="Include coverage reporting"
+    ),
+    file: Optional[str] = typer.Option(None, "--file", help="Run specific test file"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+    stop_on_first_failure: bool = typer.Option(
+        False, "--stop-on-first-failure", "-x", help="Stop on first failure"
+    ),
+):
+    """Run Python unit tests (excludes integration tests)."""
+    runner = TestRunner(verbose=verbose)
+    success = runner.run_unit_tests(
+        coverage=coverage,
+        file_pattern=file,
+        stop_on_first_failure=stop_on_first_failure,
+    )
+    runner.print_summary()
+    if not success:
+        raise typer.Exit(1)
+
+
+@app.command(name="int")
+def integration(
+    coverage: bool = typer.Option(
+        False, "--coverage", "-c", help="Include coverage reporting"
+    ),
+    file: Optional[str] = typer.Option(None, "--file", help="Run specific test file"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+    stop_on_first_failure: bool = typer.Option(
+        False, "--stop-on-first-failure", "-x", help="Stop on first failure"
+    ),
+):
+    """Run Python integration tests only."""
+    runner = TestRunner(verbose=verbose)
+    success = runner.run_integration_tests(
+        coverage=coverage,
+        file_pattern=file,
+        stop_on_first_failure=stop_on_first_failure,
+    )
+    runner.print_summary()
+    if not success:
+        raise typer.Exit(1)
+
+
+@app.command()
+def e2e(
+    file: Optional[str] = typer.Option(None, "--file", help="Run specific test file"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+    stop_on_first_failure: bool = typer.Option(
+        False, "--stop-on-first-failure", "-x", help="Stop on first failure"
+    ),
+    headed: bool = typer.Option(False, "--headed", help="Run with visible browser"),
+    debug: bool = typer.Option(
+        False, "--debug", help="Run with Playwright Inspector (implies --headed)"
+    ),
+):
+    """Run E2E browser tests."""
+    runner = TestRunner(verbose=verbose)
+    success = runner.run_e2e_tests(
+        file_pattern=file,
+        stop_on_first_failure=stop_on_first_failure,
+        headed=headed,
+        debug=debug,
+    )
+    runner.print_summary()
+    if not success:
+        raise typer.Exit(1)
 
 
 @app.command()
 def python(
+    coverage: bool = typer.Option(
+        False, "--coverage", "-c", help="Include coverage reporting"
+    ),
     file: Optional[str] = typer.Option(None, "--file", help="Run specific test file"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+    stop_on_first_failure: bool = typer.Option(
+        False, "--stop-on-first-failure", "-x", help="Stop on first failure"
+    ),
 ):
-    """Run Python tests."""
+    """Run all Python tests (unit + integration)."""
     runner = TestRunner(verbose=verbose)
-    success = runner.run_python_tests(file_pattern=file)
+    success = runner.run_all_python_tests(
+        coverage=coverage,
+        file_pattern=file,
+        stop_on_first_failure=stop_on_first_failure,
+    )
+    runner.print_summary()
+    if not success:
+        raise typer.Exit(1)
+
+
+@app.command()
+def quality(
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+):
+    """Run all code quality checks."""
+    runner = TestRunner(verbose=verbose)
+    success = runner.run_python_quality_checks()
     runner.print_summary()
     if not success:
         raise typer.Exit(1)
@@ -368,7 +721,7 @@ def python(
 
 @app.command()
 def ruff(verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output")):
-    """Run Ruff linting."""
+    """Run Ruff linting and import sorting."""
     runner = TestRunner(verbose=verbose)
     success = runner.run_ruff_check()
     runner.print_summary()
@@ -377,17 +730,55 @@ def ruff(verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose ou
 
 
 @app.command()
-def all(
+def ty(verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output")):
+    """Run ty type checking."""
+    runner = TestRunner(verbose=verbose)
+    success = runner.run_ty_check()
+    runner.print_summary()
+    if not success:
+        raise typer.Exit(1)
+
+
+@app.command()
+def cc(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+    max_complexity: int = typer.Option(
+        10, "--max-complexity", "-m", help="Maximum allowed cyclomatic complexity"
+    ),
+):
+    """Run cyclomatic complexity analysis on src (excluding tests and ui)."""
+    runner = TestRunner(verbose=verbose)
+    success = runner.run_cyclomatic_complexity(max_complexity=max_complexity)
+    runner.print_summary()
+    if not success:
+        raise typer.Exit(1)
+
+
+@app.command(name="all")
+def all_tests(
+    coverage: bool = typer.Option(
+        False, "--coverage", "-c", help="Include coverage for Python tests"
+    ),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+    max_complexity: int = typer.Option(
+        10, "--max-complexity", "-m", help="Maximum allowed cyclomatic complexity"
+    ),
 ):
     """Run all tests."""
     runner = TestRunner(verbose=verbose)
     success = True
 
-    success &= runner.run_ruff_check()
-    success &= runner.run_python_tests()
+    try:
+        success &= runner.run_python_quality_checks()
+        success &= runner.run_cyclomatic_complexity(max_complexity=max_complexity)
+        success &= runner.run_all_python_tests(coverage=coverage)
 
-    runner.print_summary()
+    except KeyboardInterrupt:
+        typer.echo("\nTest execution interrupted by user")
+        success = False
+
+    finally:
+        runner.print_summary()
 
     if not success:
         raise typer.Exit(1)
@@ -558,8 +949,14 @@ uv run python start_services.py
 
 # Run tests
 uv run python run_tests.py all
+uv run python run_tests.py unit
+uv run python run_tests.py int
+uv run python run_tests.py e2e
 uv run python run_tests.py python
+uv run python run_tests.py quality
 uv run python run_tests.py ruff
+uv run python run_tests.py ty
+uv run python run_tests.py cc
 
 # Lint code
 uv run python lint.py all

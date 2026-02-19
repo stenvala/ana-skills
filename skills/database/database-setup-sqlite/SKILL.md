@@ -240,3 +240,4 @@ See `references/sqlite-setup.md` for:
 - Common utilities (both modes)
 - Schema templates
 - Migration patterns
+

@@ -85,3 +85,4 @@ readonly itemsStore = new ListStore<FeatureDTO>();
 
 See `references/store-templates.md` for complete implementation examples with all three patterns.
 
+

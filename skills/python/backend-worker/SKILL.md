@@ -166,3 +166,4 @@ Within a single poll cycle, check task types in priority order:
 
 See `references/` folder for:
 - `worker-template.md` - Complete worker entry point, processor pattern, systemd service, and concurrency checks
+

@@ -57,3 +57,4 @@ See `references/` folder for:
 - `repository-template.md` - Basic repository structure
 - `query-patterns.md` - Common query patterns
 
+

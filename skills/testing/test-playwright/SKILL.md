@@ -86,3 +86,4 @@ See `references/` folder for:
 - `page-object-template.md` - Page object class patterns
 - `test-template.md` - Test file structure and patterns
 
+

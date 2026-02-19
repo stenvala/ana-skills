@@ -97,6 +97,64 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 7. **Separate template**: Always put HTML in separate `.html` file
 8. **Global styles**: Use classes from `src/ui/src/styles/` - minimize custom SCSS
 
+### data-test-id — MANDATORY for E2E Testing
+
+**Every component template MUST include `data-test-id` attributes on ALL important interactive and content elements.** This is critical for reliable E2E test selectors. Missing `data-test-id` attributes block test automation.
+
+**Elements that MUST have `data-test-id`:**
+- **All buttons** (submit, cancel, delete, navigation, menu triggers, icon-only buttons)
+- **All form inputs** (`<input>`, `<textarea>`, `<mat-select>`, `<mat-slide-toggle>`, `<mat-checkbox>`, etc.)
+- **All form fields** (`<mat-form-field>`) — put `data-test-id` on the `mat-form-field` wrapper
+- **Page headings** (`<h1>`, `<h2>`, etc.) that identify the page or section
+- **Table rows** (`<tr mat-row>`) — use dynamic ID with row identifier
+- **Displayed data values** (status badges, amounts, names, dates) that tests may assert on
+- **Links and navigation elements** that tests may click
+- **Empty states and loading indicators** to verify page state
+- **Dialog containers** and dialog action buttons
+- **Menu items** (`<button mat-menu-item>`)
+
+**Naming convention:** `data-test-id="<context>-<element>-<identifier>"`
+- Use kebab-case
+- Include the entity/context: `data-test-id="item-delete-btn"`, `data-test-id="filter-fiscal-year-select"`
+- For dynamic rows/items, include the identifier: `data-test-id="item-row-{{ item.id }}"`, `data-test-id="delete-btn-{{ item.id }}"`
+- For page-level elements: `data-test-id="page-title"`, `data-test-id="create-btn"`, `data-test-id="back-btn"`
+
+**Examples:**
+```html
+<!-- Page header -->
+<h1 data-test-id="page-title">Items</h1>
+<button matButton="filled" (click)="openCreateDialog()" data-test-id="create-btn">
+  <mat-icon>add</mat-icon> Lisää uusi
+</button>
+
+<!-- Form inputs -->
+<mat-form-field appearance="outline" data-test-id="name-field">
+  <input matInput [formField]="editForm.name" data-test-id="name-input" />
+</mat-form-field>
+<mat-form-field appearance="outline" data-test-id="type-field">
+  <mat-select [formField]="filterForm.type" data-test-id="type-select">...</mat-select>
+</mat-form-field>
+
+<!-- Table rows and cells -->
+<tr mat-row *matRowDef="let row; columns: displayedColumns" data-test-id="item-row-{{ row.id }}"></tr>
+<td mat-cell *matCellDef="let row" data-test-id="item-name-{{ row.id }}">{{ row.name }}</td>
+<span class="status-badge" data-test-id="item-status-{{ row.id }}">{{ row.status }}</span>
+
+<!-- Row action buttons -->
+<button mat-menu-item (click)="openEditDialog(row)" data-test-id="edit-btn-{{ row.id }}">
+  <mat-icon>edit</mat-icon> <span>Muokkaa</span>
+</button>
+<button mat-menu-item (click)="onDelete(row)" data-test-id="delete-btn-{{ row.id }}">
+  <mat-icon>delete</mat-icon> <span>Poista</span>
+</button>
+
+<!-- Empty state and loading -->
+<shared-empty-state ... data-test-id="empty-state"></shared-empty-state>
+<shared-loading-spinner data-test-id="loading-spinner"></shared-loading-spinner>
+```
+
+**Do NOT skip this.** If a template has buttons, inputs, headers, or rendered values without `data-test-id`, it is incomplete.
+
 ### Route Components
 9. **Services via inject()**: Use `private service = inject(ServiceClass)`
 10. **Route params via computed**: `formId = computed(() => this.nav.routeParamMap()['paramName'])`
@@ -279,4 +337,5 @@ See `references/` folder for:
 - `shared-component-template.md` - Shared component pattern (no SharedModule import)
 - `view-template.md` - HTML template patterns
 - `routing-template.md` - Route configuration
+
 

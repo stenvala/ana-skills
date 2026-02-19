@@ -47,11 +47,13 @@ export class SharedLoadingStateComponent {
 
 ## Template Pattern
 
+**IMPORTANT**: All interactive elements, rendered values, and key content must have `data-test-id` attributes for E2E testing. See SKILL.md for full naming convention. Use the component's selector prefix for `data-test-id` names (e.g., `shared-loading-state-spinner`, `shared-loading-state-message`).
+
 ```html
-<div class="loading-state">
+<div class="loading-state" data-test-id="loading-state">
   <mat-spinner [diameter]="spinnerDiameter()"></mat-spinner>
   @if (message()) {
-  <p class="loading-message">{{ message() }}</p>
+  <p class="loading-message" data-test-id="loading-message">{{ message() }}</p>
   }
 </div>
 ```

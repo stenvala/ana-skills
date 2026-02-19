@@ -142,6 +142,10 @@ export class RouteFeatureItemListComponent {
 }
 ```
 
+## Template data-test-id Requirement
+
+**IMPORTANT**: When creating the HTML template for a route component, ALL interactive elements, rendered values, and key content must have `data-test-id` attributes for E2E testing. This includes all buttons, inputs, selects, toggles, page titles, table rows, cell values, status badges, loading states, and empty states. See SKILL.md for the full naming convention and required element list.
+
 ## Key Patterns
 
 ### Service Injection

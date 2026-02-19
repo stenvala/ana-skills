@@ -126,3 +126,4 @@ See `references/` folder for:
 - `dto-template.md` - DTO patterns with Field() validation
 - `router-template.md` - Complete router implementation
 
+

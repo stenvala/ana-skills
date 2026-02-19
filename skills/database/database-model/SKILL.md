@@ -68,3 +68,4 @@ See `references/` folder for:
 - `enum-template.md` - Enum class patterns
 - `jsonb-pattern.md` - JSONB field handling
 
+

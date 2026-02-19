@@ -60,3 +60,4 @@ See `references/` folder for:
 - `base-infrastructure.md` - **Start here for fresh projects**: MinimalUser, logger, audit models
 - `service-template.md` - Complete service implementation pattern
 
+

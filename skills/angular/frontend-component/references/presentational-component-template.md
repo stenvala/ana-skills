@@ -94,21 +94,24 @@ export class ItemListViewerComponent {
 
 ## Template Pattern
 
+**IMPORTANT**: All interactive elements, rendered values, and key content must have `data-test-id` attributes for E2E testing. See SKILL.md for full naming convention.
+
 ```html
 <!-- No route-container - parent handles layout -->
-<div class="item-list-viewer">
+<div class="item-list-viewer" data-test-id="item-list-viewer">
   @if (showEmptyState()) {
   <shared-empty-content
     icon="folder_open"
     title="No Items"
     description="No items to display."
+    data-test-id="empty-state"
   >
   </shared-empty-content>
   } @else { @for (item of items(); track trackByItemId($index, item)) {
-  <div class="item-row" (click)="onItemClick(item)">
+  <div class="item-row" (click)="onItemClick(item)" data-test-id="item-row-{{ item.id }}">
     <div class="item-content">
-      <span class="item-name">{{ formatDisplayName(item) }}</span>
-      <span class="item-date">{{ formatDate(item.createdAt) }}</span>
+      <span class="item-name" data-test-id="item-name-{{ item.id }}">{{ formatDisplayName(item) }}</span>
+      <span class="item-date" data-test-id="item-date-{{ item.id }}">{{ formatDate(item.createdAt) }}</span>
     </div>
 
     @if (showActions()) {
@@ -123,7 +126,7 @@ export class ItemListViewerComponent {
       <button
         mat-icon-button
         (click)="onDelete(item.id); $event.stopPropagation()"
-        data-test-id="delete-{{ item.id }}"
+        data-test-id="delete-btn-{{ item.id }}"
       >
         <mat-icon>delete</mat-icon>
       </button>

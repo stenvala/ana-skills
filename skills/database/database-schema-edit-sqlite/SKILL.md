@@ -161,3 +161,4 @@ uv run setup_db.py local-update
 - Use suffixes for related migrations: `008_..., 008b_..., 008c_...`
 - Always include header comment with purpose/feature reference
 
+
