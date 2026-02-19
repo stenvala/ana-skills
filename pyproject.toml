@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-ana_skills = "ana_skills.cli:app"
+ana-skills = "ana_skills.cli:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["ana_skills"]
