@@ -1,9 +1,6 @@
 ---
 name: database-model
 description: |
-  Create SQLModel Python classes from database schema.
-  Use when: Implementing Python models after schema is created, adding relationships between models,
-  or creating enum definitions for database fields.
 ---
 
 # Database Model Creation
@@ -70,3 +67,4 @@ See `references/` folder for:
 - `model-template.md` - Basic model structure
 - `enum-template.md` - Enum class patterns
 - `jsonb-pattern.md` - JSONB field handling
+

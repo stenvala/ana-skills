@@ -1,9 +1,6 @@
 ---
 name: frontend-forms
 description: |
-  Create Angular 21 signal-based form components using the new forms API.
-  Use when: Creating forms in dialogs or route components, including validation,
-  field binding, and async form submission with loading states.
 ---
 
 # Frontend Forms Creation
@@ -261,3 +258,4 @@ See `references/` folder for:
 - `signal-form-dialog-template.md` - Dialog form pattern (Pattern 1)
 - `signal-form-component-template.md` - Route component form patterns (Pattern 4, 5, 6)
 - `signal-form-patterns.md` - Validation, button styling, and valueChanges replacement patterns
+

@@ -1,9 +1,6 @@
 ---
 name: test-playwright
 description: |
-  Create Playwright E2E tests using the Page Object pattern with async/await.
-  Use when: Writing end-to-end tests for user workflows, testing complete features
-  from the user's perspective, or validating UI interactions across pages.
 ---
 
 # E2E Test Creation
@@ -88,3 +85,4 @@ See `references/` folder for:
 - `base-infrastructure.md` - Base page class, conftest fixtures, utilities
 - `page-object-template.md` - Page object class patterns
 - `test-template.md` - Test file structure and patterns
+

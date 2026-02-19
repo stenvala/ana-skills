@@ -1,9 +1,6 @@
 ---
 name: database-design
 description: |
-  Design database data models with ERD diagrams, table structures, and business rules.
-  Use when: Starting a new feature that requires database tables, designing data relationships,
-  or documenting existing database structure.
 ---
 
 # Database Design
@@ -66,3 +63,4 @@ After design is complete:
 2. Verify all fields have types and constraints
 3. Ensure enums have clear descriptions
 4. Confirm business rules are documented
+

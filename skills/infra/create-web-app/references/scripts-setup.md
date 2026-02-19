@@ -152,6 +152,7 @@ class ServiceOrchestrator:
         services = [
             ("api", ["uv", "run", "uvicorn", "api.main:app",
                     "--host", "0.0.0.0", "--port", "<API_PORT>", "--reload"], Path("src")),
+            ("worker", ["uv", "run", "python", "-m", "worker.main"], Path("src")),
             ("ui", ["npx", "ng", "serve", "--host", "0.0.0.0", "--port", "<UI_PORT>"], Path("src/ui"))
         ]
 

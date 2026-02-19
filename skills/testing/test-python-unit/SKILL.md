@@ -1,9 +1,6 @@
 ---
 name: test-python-unit
 description: |
-  Create pytest unit tests for backend code.
-  Use when: Writing tests for services, repositories, or routers after implementation,
-  or when adding test coverage to existing backend code.
 ---
 
 # Backend Test Creation
@@ -152,3 +149,4 @@ uv run run_tests.py quality
 See `references/` folder for:
 
 - `unit-test-patterns.md` - Unit test examples for services, repos, routers
+

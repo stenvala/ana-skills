@@ -1,9 +1,6 @@
 ---
 name: frontend-service
 description: |
-  Create Angular business logic services that orchestrate API calls and state management.
-  Use when: Implementing service layer for a feature that needs to coordinate API service
-  and state store, or adding CRUD operations with proper store updates.
 ---
 
 # Frontend Service Creation
@@ -58,3 +55,4 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 ## Templates
 
 See `references/service-template.md` for the complete reference implementation.
+

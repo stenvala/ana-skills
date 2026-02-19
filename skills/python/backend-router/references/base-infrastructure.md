@@ -10,30 +10,33 @@ Create the following structure in a fresh project:
 src/
 ├── api/
 │   ├── __init__.py
-│   ├── main.py
-│   ├── base_dto.py                    # BaseDTO class
-│   ├── common_dto.py                  # Common DTOs (StatusDTO)
-│   ├── routers/
+│   ├── main.py                        # FastAPI app, middleware, lifespan
+│   ├── routers/                       # API route handlers only
 │   │   └── __init__.py
-│   ├── dtos/
-│   │   └── __init__.py
-│   └── dependencies/
+│   └── dependencies/                  # FastAPI dependency injection
 │       ├── __init__.py
 │       ├── database.py                # Database session dependency
 │       ├── repositories.py            # Repository dependencies
 │       └── services.py                # Service dependencies
-└── shared/
+├── worker/                            # Background worker (optional)
+│   ├── __init__.py
+│   └── main.py                        # Worker entry point
+└── shared/                            # Shared by API and worker
     ├── __init__.py
+    ├── base_dto.py                    # BaseDTO class
+    ├── common_dto.py                  # Common DTOs (StatusDTO)
+    ├── dtos/                          # Feature DTOs
+    │   └── __init__.py
+    ├── services/                      # Business logic services
+    │   └── __init__.py
     ├── db/
     │   ├── __init__.py
-    │   ├── session.py                 # Database session management
+    │   ├── db_context.py              # Database session management
     │   ├── models/
     │   │   ├── __init__.py
     │   │   └── base_model.py          # BaseDBModelMixin
     │   └── repositories/
     │       └── __init__.py
-    ├── services/
-    │   └── __init__.py
     ├── enums/
     │   ├── __init__.py
     │   └── status_enum.py             # Common StatusEnum
@@ -42,7 +45,9 @@ src/
         └── minimal_user.py            # MinimalUser for audit
 ```
 
-## 1. BaseDTO (src/api/base_dto.py)
+**Note**: Services, DTOs, and base_dto live in `src/shared/` (not `src/api/`) because both the API and worker process need access to business logic. The `src/api/` directory contains only routers, middleware, and dependency injection.
+
+## 1. BaseDTO (src/shared/base_dto.py)
 
 ```python
 """Base DTO class with camelCase conversion."""
@@ -72,14 +77,14 @@ class BaseDTO(BaseModel):
     )
 ```
 
-## 2. Common DTOs (src/api/common_dto.py)
+## 2. Common DTOs (src/shared/common_dto.py)
 
 ```python
 """Common DTOs used across multiple routers."""
 
 from pydantic import Field
 
-from .base_dto import BaseDTO
+from shared.base_dto import BaseDTO
 
 
 class StatusDTO(BaseDTO):

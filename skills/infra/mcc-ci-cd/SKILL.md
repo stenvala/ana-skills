@@ -1,15 +1,6 @@
 ---
 name: mcc-ci-cd
 description: |
-  CI/CD deployment skill for MCC (Math Coding Club) style Python/Angular web applications.
-  Use this skill when:
-  - Setting up CI/CD pipeline for a Python (FastAPI/uvicorn) + Angular web application
-  - Deploying to remote Linux servers with nginx and systemd
-  - Configuring single or multi-domain deployments
-  - Setting up database deployment (SQLite for multi-tenant or PostgreSQL for single-tenant)
-  - Creating deployment scripts for API, UI, server configuration, and database
-  - Setting up automated backups and cron jobs
-  Triggers: "deploy", "CI/CD", "nginx config", "systemd service", "deployment pipeline"
 ---
 
 # MCC CI/CD Deployment Skill
@@ -219,3 +210,4 @@ Template provides:
 - Environment variables (ENV_TYPE, LOG_ROOT)
 - Auto-restart on failure
 - 10 second restart delay
+

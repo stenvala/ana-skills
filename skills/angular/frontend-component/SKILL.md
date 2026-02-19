@@ -1,9 +1,6 @@
 ---
 name: frontend-component
 description: |
-  Create Angular standalone components with OnPush change detection and signal-based reactivity.
-  Use when: Building UI components for features, creating route pages, or implementing
-  list/detail/editor views.
 ---
 
 # Frontend Component Creation
@@ -282,3 +279,4 @@ See `references/` folder for:
 - `shared-component-template.md` - Shared component pattern (no SharedModule import)
 - `view-template.md` - HTML template patterns
 - `routing-template.md` - Route configuration
+

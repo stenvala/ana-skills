@@ -7,15 +7,16 @@
 
 from fastapi import APIRouter, Depends, status
 
-from api.base_dto import StatusDTO, StatusEnum
+from shared.common_dto import StatusDTO
+from shared.enums.status_enum import StatusEnum
 from api.dependencies.<domain> import get_<feature>_service
-from api.dtos.<domain>.<feature>_dtos import (
+from shared.dtos.<domain>.<feature>_dtos import (
     <Feature>CreateDTO,
     <Feature>DTO,
     <Feature>ListResponseDTO,
     <Feature>UpdateDTO,
 )
-from api.services.<domain>.<feature>_service import <Feature>Service
+from shared.services.<domain>.<feature>_service import <Feature>Service
 
 router = APIRouter()
 
@@ -114,8 +115,8 @@ Add service dependency in `src/api/dependencies/<domain>.py`:
 from fastapi import Depends
 from sqlmodel import Session
 
-from api.services.<domain>.<feature>_service import <Feature>Service
-from api.services.<domain>.audit_trail_service import AuditTrailService
+from shared.services.<domain>.<feature>_service import <Feature>Service
+from shared.services.<domain>.audit_trail_service import AuditTrailService
 from .core import get_db_session
 
 

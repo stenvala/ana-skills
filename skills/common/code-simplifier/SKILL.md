@@ -1,9 +1,6 @@
 ---
 name: code-simplifier
 description: |
-  Simplify and refine recently modified code for clarity and consistency.
-  Use when: After frontend-* or backend-* skills, or when reviewing code quality.
-  Triggers: "simplify code", "clean up code", "review code quality"
 ---
 
 # Code Simplifier
@@ -102,3 +99,4 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 # Backend
 cd src && uv run python -c "from api.main import app; print('OK')"
 ```
+

@@ -45,7 +45,7 @@ async def list_features() -> FeatureListResponseDTO:  # CORRECT!
 
 ## File Location
 
-Create DTO files at: `src/api/dtos/<feature>_dtos.py`
+Create DTO files at: `src/shared/dtos/<domain>/<feature>_dtos.py`
 
 ## Complete DTO Example
 
@@ -56,7 +56,7 @@ from typing import Optional
 
 from pydantic import Field
 
-from ..base_dto import BaseDTO
+from shared.base_dto import BaseDTO
 
 
 class FeatureCreateDTO(BaseDTO):
@@ -220,4 +220,4 @@ tags: list[str] = Field(..., min_length=1, max_length=10)
 
 ## BaseDTO Reference
 
-See `base-infrastructure.md` for the BaseDTO implementation that must be created at `src/api/base_dto.py`.
+See `base-infrastructure.md` for the BaseDTO implementation that must be created at `src/shared/base_dto.py`.

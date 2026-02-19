@@ -1,9 +1,6 @@
 ---
 name: commit
 description: |
-  Write and execute git commit messages following conventional commit format.
-  Use when: Ready to commit staged changes, need help writing a commit message,
-  or want to review changes before committing.
 ---
 
 # Write and Execute Commit Messages
@@ -76,3 +73,4 @@ Present the suggested message and ask for approval:
 - **Approve** - Proceed with commit
 - **Modify** - Change the message
 - **Discard** - Cancel and make different changes
+

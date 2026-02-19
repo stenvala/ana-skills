@@ -1,9 +1,6 @@
 ---
 name: frontend-dialog
 description: |
-  Create Angular Material dialog components with static open method and typed input/output.
-  Use when: Creating modal dialogs for forms, confirmations, or complex interactions
-  that need to return data to the caller.
 ---
 
 # Frontend Dialog Creation
@@ -96,3 +93,4 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 See `references/` folder for:
 
 - `dialog-template.md` - Dialog component pattern with forms
+

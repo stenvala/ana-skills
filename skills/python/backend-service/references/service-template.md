@@ -8,12 +8,12 @@
 from fastapi import HTTPException, status
 from sqlmodel import Session
 
-from api.dtos.<domain>.<feature>_dtos import (
+from shared.dtos.<domain>.<feature>_dtos import (
     <Feature>CreateDTO,
     <Feature>DTO,
     <Feature>UpdateDTO,
 )
-from api.services.<domain>.audit_trail_service import AuditTrailService
+from shared.services.<domain>.audit_trail_service import AuditTrailService
 from shared.db.models.<domain>_models import <Feature>
 from shared.db.repositories.<domain>_repository import <Feature>Repository
 

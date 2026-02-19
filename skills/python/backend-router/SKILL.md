@@ -1,9 +1,6 @@
 ---
 name: backend-router
 description: |
-  Create FastAPI router endpoints with DTOs and dependency injection.
-  Use when: Exposing backend functionality via REST API, creating CRUD endpoints,
-  or adding new API routes to existing features.
 ---
 
 # Backend Router Creation
@@ -25,19 +22,21 @@ Create FastAPI routers for API endpoints with proper DTOs and dependency injecti
 
 ## File Locations
 
-- **Base infrastructure**: `src/api/base_dto.py`
+- **Base infrastructure**: `src/shared/base_dto.py`
 - **Router**: `src/api/routers/private_<feature>_router.py` or `public_<feature>_router.py`
-- **DTOs**: `src/api/dtos/<domain>/<feature>_dtos.py` (e.g., `src/api/dtos/accounting/posting_dtos.py`)
-- **Services**: `src/api/services/<domain>/<feature>_service.py`
+- **DTOs**: `src/shared/dtos/<domain>/<feature>_dtos.py` (e.g., `src/shared/dtos/accounting/posting_dtos.py`)
+- **Services**: `src/shared/services/<domain>/<feature>_service.py`
 - **Dependencies**: `src/api/dependencies/<domain>.py` (e.g., `src/api/dependencies/accounting.py`)
+
+**Note**: Services and DTOs live in `src/shared/` (not `src/api/`) because both the API and worker process need access to business logic. The `src/api/` directory contains only routers, middleware, and dependency injection.
 
 ## Instructions
 
 ### 1. Create Base Infrastructure (first time only)
 
 If this is a fresh project, first create the base infrastructure following `references/base-infrastructure.md`:
-- `src/api/base_dto.py` - BaseDTO class with camelCase conversion
-- `src/api/common_dto.py` - StatusDTO and common DTOs
+- `src/shared/base_dto.py` - BaseDTO class with camelCase conversion
+- `src/shared/common_dto.py` - StatusDTO and common DTOs
 - `src/shared/db/models/base_model.py` - BaseDBModelMixin with dump_to_dto_dict
 - `src/shared/enums/status_enum.py` - Common StatusEnum
 - `src/shared/models/minimal_user.py` - MinimalUser for audit trails
@@ -126,3 +125,4 @@ See `references/` folder for:
 - `base-infrastructure.md` - **Start here for fresh projects**: BaseDTO, common DTOs, base model mixin
 - `dto-template.md` - DTO patterns with Field() validation
 - `router-template.md` - Complete router implementation
+

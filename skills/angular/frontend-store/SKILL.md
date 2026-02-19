@@ -1,9 +1,6 @@
 ---
 name: frontend-store
 description: |
-  Create Angular signal-based stores using ListStore/ObjectStore patterns.
-  Use when: Adding state management for a new frontend feature, creating stores for
-  caching API data, or implementing reactive data patterns.
 ---
 
 # Frontend Store Creation
@@ -87,3 +84,4 @@ readonly itemsStore = new ListStore<FeatureDTO>();
 ## Reference
 
 See `references/store-templates.md` for complete implementation examples with all three patterns.
+

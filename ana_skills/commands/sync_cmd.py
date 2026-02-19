@@ -1,4 +1,4 @@
-"""ana_skills sync -- sync skills to the target project."""
+"""ana_skills download -- download skills from package to the target project."""
 
 from __future__ import annotations
 
@@ -112,7 +112,7 @@ def _check_new_skills(cfg: dict) -> dict[str, bool] | None:
     return updates
 
 
-def sync_command(
+def download_command(
     project_dir: Path = typer.Option(
         Path.cwd(),
         "--project-dir",
@@ -120,7 +120,7 @@ def sync_command(
         help="Project root directory.",
     ),
 ) -> None:
-    """Sync agent skills to the project.
+    """Download skills from the package to the project.
 
     On first run, asks which agent environment and skills to sync.
     On subsequent runs, syncs previously selected skills and offers to add new ones.

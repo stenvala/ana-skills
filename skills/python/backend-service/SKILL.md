@@ -1,9 +1,6 @@
 ---
 name: backend-service
 description: |
-  Create business logic service layer for write operations with audit trails.
-  Use when: Implementing create/update/delete operations that require business validation,
-  audit logging, or complex business rules beyond simple CRUD.
 ---
 
 # Backend Service Creation
@@ -24,9 +21,11 @@ Create service classes that implement business logic for write operations.
 
 ## File Location
 
-Create services at: `src/api/services/<domain>/<feature>_service.py`
+Create services at: `src/shared/services/<domain>/<feature>_service.py`
 
-Example: `src/api/services/accounting/posting_service.py`
+Example: `src/shared/services/accounting/posting_service.py`
+
+**Note**: Services live in `src/shared/` (not `src/api/`) because both the API and worker process need access to business logic. The `src/api/` directory contains only routers, middleware, and dependency injection.
 
 ## Instructions
 
@@ -41,7 +40,7 @@ Add create, update, and delete methods with audit logging.
 ### 3. Verify Import
 
 ```bash
-cd src && uv run python -c "from api.services.<domain>.<feature>_service import <Feature>Service; print('OK')"
+cd src && uv run python -c "from shared.services.<domain>.<feature>_service import <Feature>Service; print('OK')"
 ```
 
 ## Key Rules
@@ -60,3 +59,4 @@ cd src && uv run python -c "from api.services.<domain>.<feature>_service import 
 See `references/` folder for:
 - `base-infrastructure.md` - **Start here for fresh projects**: MinimalUser, logger, audit models
 - `service-template.md` - Complete service implementation pattern
+

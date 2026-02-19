@@ -1,9 +1,6 @@
 ---
 name: test-python-integration
 description: |
-  Create pytest integration tests that test end-to-end API flows via TestClient.
-  Use when: User explicitly requests integration tests. Tests exercise complete user workflows
-  through API endpoints, verifying the full stack works correctly together.
 ---
 
 # Integration Test Creation
@@ -173,3 +170,4 @@ value1,value2"""
 See `references/` folder for:
 
 - `integration-test-example.py` - Complete integration test example
+

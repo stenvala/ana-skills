@@ -1,9 +1,6 @@
 ---
 name: database-schema-edit-sqlite
 description: |
-  Create or modify SQLite database schema from data model design.
-  Use when: Implementing SQLite database tables after design approval, adding columns to existing tables,
-  creating indexes, or adding foreign key constraints. For PostgreSQL projects, use database-schema-edit-postgres instead.
 ---
 
 # Database Schema Edit (SQLite)
@@ -163,3 +160,4 @@ uv run setup_db.py local-update
 - Use format: `NNN_description.sql` (e.g., `001_add_document_reference_number.sql`)
 - Use suffixes for related migrations: `008_..., 008b_..., 008c_...`
 - Always include header comment with purpose/feature reference
+

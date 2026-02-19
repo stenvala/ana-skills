@@ -1,4 +1,4 @@
-# Angular 20 Setup Reference
+# Angular 21 Setup Reference
 
 ## 1. Create .nvmrc File
 
@@ -142,7 +142,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         console.error("Authentication failed");
       }
       return throwError(() => error);
-    })
+    }),
   );
 };
 

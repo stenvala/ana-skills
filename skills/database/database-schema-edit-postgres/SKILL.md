@@ -1,9 +1,6 @@
 ---
 name: database-schema-edit-postgres
 description: |
-  Create or modify PostgreSQL database schema from data model design.
-  Use when: Implementing PostgreSQL database tables after design approval, adding columns to existing tables,
-  creating indexes, or adding foreign key constraints. For SQLite projects, use database-schema-edit-sqlite instead.
 ---
 
 # Database Schema Edit (PostgreSQL)
@@ -62,3 +59,4 @@ See `references/schema-examples.md` for examples of:
 - Adding columns to existing tables
 - Creating indexes
 - Adding migration support
+

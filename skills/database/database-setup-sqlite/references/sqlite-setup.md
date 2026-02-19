@@ -4,31 +4,51 @@ SQLite is a file-based database ideal for local development and simple applicati
 
 ## Database Location
 
-SQLite databases are stored at: `mcc/domains/<domain>/data.db`
+**CRITICAL**: The database file MUST always be named `data.db`. Never use project-specific names.
 
-Default domain is `localhost` for local development.
+### Single-Tenant Mode (default)
+
+SQLite database is stored at: `mcc/data/data.db`
+
+In production, the `DATA_DIR` environment variable points to the data directory.
+
+### Multitenant Mode
+
+SQLite databases are stored per domain at: `mcc/domains/<domain>/data.db`
+
+- `localhost` - Local development
+- `example.com` - Production domain
 
 ## setup_db.py Template
+
+### Single-Tenant Mode
 
 ```python
 #!/usr/bin/env python3
 """Database setup script using SQLite."""
 
 import sqlite3
+import os
 from pathlib import Path
 
 import typer
 
 app = typer.Typer(help="Setup SQLite database")
 
-DEFAULT_DOMAIN = "localhost"
+
+def get_data_dir() -> Path:
+    """Get data directory. Uses DATA_DIR env var or defaults to mcc/data."""
+    data_dir = os.environ.get("DATA_DIR")
+    if data_dir:
+        return Path(data_dir)
+    return Path(__file__).parent / "mcc" / "data"
 
 
-def get_db_path(domain: str = DEFAULT_DOMAIN) -> Path:
-    """Get database path for a domain. Default is localhost for local development."""
-    db_dir = Path(__file__).parent / "mcc" / "domains" / domain
-    db_dir.mkdir(parents=True, exist_ok=True)
-    return db_dir / "data.db"
+def get_db_path() -> Path:
+    """Get database path."""
+    data_dir = get_data_dir()
+    data_dir.mkdir(parents=True, exist_ok=True)
+    return data_dir / "data.db"
 
 
 def get_scripts_path() -> Path:
@@ -95,9 +115,9 @@ def run_migrations(conn: sqlite3.Connection) -> None:
             raise
 
 
-def _create_schema(domain: str = DEFAULT_DOMAIN) -> None:
+def _create_schema() -> None:
     """Create database schema and run migrations."""
-    db_path = get_db_path(domain)
+    db_path = get_db_path()
     print(f"Creating schema in: {db_path}")
 
     conn = sqlite3.connect(str(db_path))
@@ -112,9 +132,9 @@ def _create_schema(domain: str = DEFAULT_DOMAIN) -> None:
         conn.close()
 
 
-def _drop_db(domain: str = DEFAULT_DOMAIN) -> None:
+def _drop_db() -> None:
     """Drop database by deleting the file."""
-    db_path = get_db_path(domain)
+    db_path = get_db_path()
     print(f"Dropping database: {db_path}")
 
     if db_path.exists():
@@ -124,75 +144,38 @@ def _drop_db(domain: str = DEFAULT_DOMAIN) -> None:
         print(f"WARNING: Database not found: {db_path}")
 
 
-def _add_demo_data(domain: str = DEFAULT_DOMAIN) -> None:
-    """Add demo data to database."""
-    db_path = get_db_path(domain)
-    print(f"Adding demo data to: {db_path}")
-
-    if not db_path.exists():
-        print("ERROR: Database does not exist. Create schema first.")
-        return
-
-    conn = sqlite3.connect(str(db_path))
-    try:
-        scripts_path = get_scripts_path()
-        demo_data_file = scripts_path / "demo_data.sql"
-        if demo_data_file.exists():
-            execute_sql_file(conn, demo_data_file, "Demo data")
-            print("PASS: Demo data added successfully.")
-        else:
-            print("WARNING: No demo data file found.")
-    except sqlite3.Error as e:
-        print(f"ERROR: Error adding demo data: {e}")
-    finally:
-        conn.close()
-
-
 @app.command()
-def create(
-    domain: str = typer.Option(DEFAULT_DOMAIN, "--domain", "-d", help="Domain name"),
-) -> None:
-    """Create database schema."""
-    _create_schema(domain)
+def create() -> None:
+    """Create database schema and run migrations."""
+    _create_schema()
 
 
 @app.command()
 def drop(
-    domain: str = typer.Option(DEFAULT_DOMAIN, "--domain", "-d", help="Domain name"),
     confirm: bool = typer.Option(False, "--confirm", help="Skip confirmation"),
 ) -> None:
     """Drop database."""
     if not confirm:
-        db_path = get_db_path(domain)
+        db_path = get_db_path()
         typer.confirm(f"Drop database '{db_path}'? This cannot be undone!", abort=True)
-    _drop_db(domain)
-
-
-@app.command()
-def demo_data(
-    domain: str = typer.Option(DEFAULT_DOMAIN, "--domain", "-d", help="Domain name"),
-) -> None:
-    """Add demo data to database."""
-    _add_demo_data(domain)
+    _drop_db()
 
 
 @app.command()
 def local() -> None:
-    """Reset and initialize localhost database with demo data."""
-    print("Resetting and initializing localhost database...")
-    _drop_db(DEFAULT_DOMAIN)
-    _create_schema(DEFAULT_DOMAIN)
-    _add_demo_data(DEFAULT_DOMAIN)
-    print("PASS: Localhost database ready!")
+    """Reset and initialize database."""
+    print("Resetting and initializing database...")
+    _drop_db()
+    _create_schema()
+    print("PASS: Database ready!")
 
 
 @app.command()
 def run(
-    domain: str = typer.Option(DEFAULT_DOMAIN, "--domain", "-d", help="Domain name"),
     cmd: str = typer.Option(..., "--cmd", help="SQL command to execute"),
 ) -> None:
     """Execute arbitrary SQL command against database."""
-    db_path = get_db_path(domain)
+    db_path = get_db_path()
     print(f"Executing SQL on: {db_path}")
     print(f"Command: {cmd}\n")
 
@@ -229,6 +212,38 @@ def run(
 
 if __name__ == "__main__":
     app()
+```
+
+### Multitenant Mode
+
+The multitenant template adds `--domain` flag to each command and resolves per-domain data directories. Add `DEFAULT_DOMAIN = "localhost"` at the top and add `domain` parameter to `get_db_path()`:
+
+```python
+DEFAULT_DOMAIN = "localhost"
+
+
+def get_data_dir_for_domain(domain: str) -> Path:
+    """Get data directory for a specific domain."""
+    data_dir = os.environ.get("DATA_DIR")
+    if data_dir:
+        return Path(data_dir) / domain
+    return Path(__file__).parent / "mcc" / "domains" / domain
+
+
+def get_db_path(domain: str = DEFAULT_DOMAIN) -> Path:
+    """Get database path for domain."""
+    data_dir = get_data_dir_for_domain(domain)
+    data_dir.mkdir(parents=True, exist_ok=True)
+    return data_dir / "data.db"
+
+
+# Commands use --domain flag:
+@app.command()
+def create(
+    domain: str = typer.Option(DEFAULT_DOMAIN, "--domain", "-d", help="Domain name"),
+) -> None:
+    """Create database schema."""
+    _create_schema(domain)
 ```
 
 ## Schema Template
@@ -296,28 +311,101 @@ ALTER TABLE admins ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 0;
 
 ## DBContext Class
 
-Create `src/shared/db/db_context.py` for database session management:
+Create `src/shared/db/db_context.py` for database session management.
+
+### Single-Tenant Mode
 
 ```python
-"""
-Database context manager for handling SQLite database connections and sessions.
-
-Provides centralized database session management with domain-based multitenancy.
-Each domain has its own SQLite database file.
-"""
+"""Database context manager for SQLite session management with WAL mode."""
 
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Generator
 
-from sqlalchemy import Engine
+from sqlalchemy import Engine, event
+from sqlmodel import Session, create_engine
+
+from shared.common import get_data_dir
+
+
+class DBContext:
+    """Database context manager for session handling."""
+
+    _engine: Engine | None = None
+
+    @staticmethod
+    def _get_db_path() -> Path:
+        """Get database path."""
+        data_dir = get_data_dir()
+        data_dir.mkdir(parents=True, exist_ok=True)
+        return data_dir / "data.db"
+
+    @staticmethod
+    def _get_engine() -> Engine:
+        """Get or create database engine with WAL mode."""
+        if DBContext._engine is None:
+            db_path = DBContext._get_db_path()
+            database_url = f"sqlite:///{db_path}"
+            DBContext._engine = create_engine(
+                database_url,
+                echo=False,
+                connect_args={
+                    "check_same_thread": False,
+                    "timeout": 30,
+                },
+            )
+
+            @event.listens_for(DBContext._engine, "connect")
+            def set_sqlite_pragma(dbapi_connection, connection_record):
+                cursor = dbapi_connection.cursor()
+                cursor.execute("PRAGMA journal_mode=WAL")
+                cursor.execute("PRAGMA foreign_keys=ON")
+                cursor.execute("PRAGMA busy_timeout=5000")
+                cursor.close()
+
+        return DBContext._engine
+
+    @staticmethod
+    def dispose_engine() -> None:
+        """Dispose cached engine to free database connections."""
+        if DBContext._engine is not None:
+            DBContext._engine.dispose()
+            DBContext._engine = None
+
+    @staticmethod
+    @contextmanager
+    def get_session() -> Generator[Session, None, None]:
+        """Get a database session with automatic transaction management."""
+        engine = DBContext._get_engine()
+
+        with Session(engine) as session:
+            try:
+                yield session
+                session.commit()
+            except Exception:
+                session.rollback()
+                raise
+```
+
+### Multitenant Mode
+
+For multitenant applications, use instance-based DBContext with per-domain engines:
+
+```python
+"""Database context manager for SQLite with domain-based multitenancy."""
+
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Generator
+
+from sqlalchemy import Engine, event
 from sqlmodel import Session, create_engine
 
 from shared.common import get_directory_for_domain
 
 
 class DBContext:
-    """Database context manager for session handling and multitenancy."""
+    """Database context manager with domain-based multitenancy."""
 
     _engines: dict[str, Engine] = {}
 
@@ -327,6 +415,7 @@ class DBContext:
     def _get_db_path(self) -> Path:
         """Get database path for current domain."""
         db_dir = get_directory_for_domain(self.domain)
+        db_dir.mkdir(parents=True, exist_ok=True)
         return db_dir / "data.db"
 
     def _get_engine(self) -> Engine:
@@ -334,39 +423,37 @@ class DBContext:
         if self.domain not in DBContext._engines:
             db_path = self._get_db_path()
             database_url = f"sqlite:///{db_path}"
-            DBContext._engines[self.domain] = create_engine(
+            engine = create_engine(
                 database_url,
                 echo=False,
-                connect_args={"check_same_thread": False},
+                connect_args={
+                    "check_same_thread": False,
+                    "timeout": 30,
+                },
             )
+
+            @event.listens_for(engine, "connect")
+            def set_sqlite_pragma(dbapi_connection, connection_record):
+                cursor = dbapi_connection.cursor()
+                cursor.execute("PRAGMA journal_mode=WAL")
+                cursor.execute("PRAGMA foreign_keys=ON")
+                cursor.execute("PRAGMA busy_timeout=5000")
+                cursor.close()
+
+            DBContext._engines[self.domain] = engine
 
         return DBContext._engines[self.domain]
 
-    def dispose_engines(self) -> None:
-        """Dispose all cached engines to free database connections."""
-        for engine in DBContext._engines.values():
+    @classmethod
+    def dispose_engines(cls) -> None:
+        """Dispose all cached engines."""
+        for engine in cls._engines.values():
             engine.dispose()
-        DBContext._engines.clear()
+        cls._engines.clear()
 
     @contextmanager
-    def get_db_session(self) -> Generator[Session, None, None]:
-        """
-        Get a database session with automatic transaction management.
-
-        Provides:
-        - Automatic session creation
-        - Automatic transaction commit on success
-        - Automatic transaction rollback on exception
-        - Automatic session cleanup
-
-        Usage:
-            with DBContext().get_db_session() as session:
-                # Use session for database operations
-
-            # Or with specific domain:
-            with DBContext("example.com").get_db_session() as session:
-                # Use domain-specific database
-        """
+    def get_session(self) -> Generator[Session, None, None]:
+        """Get a database session with automatic transaction management."""
         engine = self._get_engine()
 
         with Session(engine) as session:
@@ -380,7 +467,30 @@ class DBContext:
 
 ## Common Utilities
 
-Create `src/shared/common.py` for shared utilities:
+Create `src/shared/common.py` for shared utilities.
+
+### Single-Tenant Mode
+
+```python
+"""Common utilities shared across modules."""
+
+import os
+from pathlib import Path
+
+
+def get_data_dir() -> Path:
+    """Get the data directory path.
+
+    In production, uses DATA_DIR environment variable.
+    In development, defaults to mcc/data relative to project root.
+    """
+    data_dir = os.environ.get("DATA_DIR")
+    if data_dir:
+        return Path(data_dir)
+    return Path(__file__).parent.parent.parent.absolute() / "mcc" / "data"
+```
+
+### Multitenant Mode
 
 ```python
 """Common utilities shared across modules."""
@@ -391,8 +501,9 @@ from pathlib import Path
 
 def get_directory_for_domain(domain: str) -> Path:
     """Get the directory path for a domain's data."""
-    if os.environ.get("ENV_TYPE") == "PROD":
-        return Path("/path/to/prod/domains") / domain
+    data_dir = os.environ.get("DATA_DIR")
+    if data_dir:
+        return Path(data_dir) / domain
     return Path(__file__).parent.parent.parent.absolute() / "mcc" / "domains" / domain
 ```
 
@@ -415,7 +526,7 @@ Add to project README.md:
 ```markdown
 ## Database
 
-This project uses **SQLite** for data storage. Database files are stored in `mcc/domains/<domain>/data.db`.
+This project uses **SQLite** for data storage. Database file is stored at `mcc/data/data.db`.
 
 ### Setup
 
@@ -423,7 +534,7 @@ This project uses **SQLite** for data storage. Database files are stored in `mcc
 # Create database schema
 uv run python setup_db.py create
 
-# Reset and initialize with demo data
+# Reset and initialize
 uv run python setup_db.py local
 
 # Drop database

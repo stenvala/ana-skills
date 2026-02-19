@@ -1,8 +1,6 @@
 ---
 name: database-setup-postgres
 description: |
-  Set up a PostgreSQL database for the project with setup_db.py script and schema creation.
-  Use when: Creating a new PostgreSQL database with initial schema in Docker.
 ---
 
 # Setup PostgreSQL Database
@@ -112,3 +110,4 @@ After setup:
 ## Templates
 
 See `references/postgres-setup.md` for complete setup_db.py template.
+
