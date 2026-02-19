@@ -1,4 +1,4 @@
-"""Configuration file (.ana-skills.yml) management."""
+"""Configuration file (.ana_skills.yml) management."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 
 import yaml
 
-from ana-skills.models import CONFIG_FILE, AgentFramework
+from ana_skills.models import CONFIG_FILE, AgentFramework
 
 
 def config_path(project_dir: Path) -> Path:
@@ -21,7 +21,7 @@ def config_exists(project_dir: Path) -> bool:
 
 
 def load_config(project_dir: Path) -> dict[str, Any]:
-    """Load the .ana-skills.yml config. Returns empty dict if missing."""
+    """Load the .ana_skills.yml config. Returns empty dict if missing."""
     path = config_path(project_dir)
     if not path.exists():
         return {}
@@ -29,11 +29,13 @@ def load_config(project_dir: Path) -> dict[str, Any]:
 
 
 def save_config(project_dir: Path, cfg: dict[str, Any]) -> None:
-    """Save config to .ana-skills.yml."""
+    """Save config to .ana_skills.yml."""
     path = config_path(project_dir)
     if "skills" in cfg:
         cfg["skills"] = dict(sorted(cfg["skills"].items()))
-    path.write_text(yaml.dump(cfg, default_flow_style=False, sort_keys=False), encoding="utf-8")
+    path.write_text(
+        yaml.dump(cfg, default_flow_style=False, sort_keys=False), encoding="utf-8"
+    )
 
 
 def get_agent(cfg: dict[str, Any]) -> AgentFramework | None:

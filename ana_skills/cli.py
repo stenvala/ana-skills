@@ -1,11 +1,11 @@
-"""CLI entry point for ana-skills."""
+"""CLI entry point for ana_skills."""
 
 import typer
 
-from ana-skills.commands.sync_cmd import sync_command
+from ana_skills.commands.sync_cmd import sync_command
 
 app = typer.Typer(
-    name="ana-skills",
+    name="ana_skills",
     help="Sync agent skills to projects.",
     no_args_is_help=True,
 )

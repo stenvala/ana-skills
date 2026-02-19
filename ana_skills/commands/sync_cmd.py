@@ -1,4 +1,4 @@
-"""ana-skills sync -- sync skills to the target project."""
+"""ana_skills sync -- sync skills to the target project."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from ana-skills.config import (
+from ana_skills.config import (
     config_exists,
     get_agent,
     get_all_configured_skills,
@@ -15,9 +15,9 @@ from ana-skills.config import (
     load_config,
     save_config,
 )
-from ana-skills.models import AgentFramework
-from ana-skills.resources import get_all_skill_names, list_all_skills
-from ana-skills.sync import sync_skills
+from ana_skills.models import AgentFramework
+from ana_skills.resources import get_all_skill_names, list_all_skills
+from ana_skills.sync import sync_skills
 
 console = Console()
 
@@ -88,7 +88,11 @@ def _check_new_skills(cfg: dict) -> dict[str, bool] | None:
     console.print(
         f"\n[bold yellow]Found {len(new_skills)} new skill(s) not in your config.[/bold yellow]"
     )
-    show = typer.prompt("Would you like to review them? (y/n)", default="y").strip().lower()
+    show = (
+        typer.prompt("Would you like to review them? (y/n)", default="y")
+        .strip()
+        .lower()
+    )
     if show != "y":
         return None
 
@@ -123,7 +127,7 @@ def sync_command(
     """
     if not config_exists(project_dir):
         # First time setup
-        console.print("[bold]ana-skills setup[/bold]")
+        console.print("[bold]ana_skills setup[/bold]")
 
         framework = _ask_agent()
         selections = _ask_skills_selection()
@@ -133,7 +137,9 @@ def sync_command(
             "skills": selections,
         }
         save_config(project_dir, cfg)
-        console.print(f"\nSaved configuration to [cyan]{project_dir / '.ana-skills.yml'}[/cyan]")
+        console.print(
+            f"\nSaved configuration to [cyan]{project_dir / '.ana_skills.yml'}[/cyan]"
+        )
 
         enabled = [name for name, on in selections.items() if on]
         if enabled:
@@ -148,7 +154,9 @@ def sync_command(
     cfg = load_config(project_dir)
     framework = get_agent(cfg)
     if not framework:
-        console.print("[red]Invalid agent in .ana-skills.yml. Delete the file and run sync again.[/red]")
+        console.print(
+            "[red]Invalid agent in .ana_skills.yml. Delete the file and run sync again.[/red]"
+        )
         raise typer.Exit(1)
 
     # Check for new skills
@@ -164,9 +172,13 @@ def sync_command(
 
     enabled = get_enabled_skills(cfg)
     if not enabled:
-        console.print("[yellow]No skills enabled. Edit .ana-skills.yml to enable skills.[/yellow]")
+        console.print(
+            "[yellow]No skills enabled. Edit .ana_skills.yml to enable skills.[/yellow]"
+        )
         return
 
-    console.print(f"\nSyncing {len(enabled)} skill(s) to [cyan]{framework.value}[/cyan]...")
+    console.print(
+        f"\nSyncing {len(enabled)} skill(s) to [cyan]{framework.value}[/cyan]..."
+    )
     sync_skills(enabled, project_dir, framework)
     console.print("[bold green]Sync complete.[/bold green]")

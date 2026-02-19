@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 
-# In installed mode, skills are at ana-skills/skills/ (via hatchling force-include).
+# In installed mode, skills are at ana_skills/skills/ (via hatchling force-include).
 # In dev mode, skills are at the repo root skills/ directory.
 _pkg_skills = Path(__file__).parent / "skills"
 _repo_skills = Path(__file__).parent.parent / "skills"

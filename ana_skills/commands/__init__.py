@@ -1,1 +1,1 @@
-"""Commands package for ana-skills CLI."""
+"""Commands package for ana_skills CLI."""

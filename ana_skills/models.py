@@ -1,11 +1,11 @@
-"""Core models and constants for ana-skills."""
+"""Core models and constants for ana_skills."""
 
 from __future__ import annotations
 
 from enum import Enum
 
 
-CONFIG_FILE = ".ana-skills.yml"
+CONFIG_FILE = ".ana_skills.yml"
 
 
 class AgentFramework(str, Enum):

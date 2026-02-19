@@ -7,8 +7,8 @@ from pathlib import Path
 
 from rich.console import Console
 
-from ana-skills.models import AgentFramework, AGENT_SKILL_PATHS
-from ana-skills.resources import (
+from ana_skills.models import AgentFramework, AGENT_SKILL_PATHS
+from ana_skills.resources import (
     find_skill_family,
     get_skill_dir,
     parse_skill_frontmatter,
