@@ -1,6 +1,6 @@
 ---
 name: database-schema-edit-sqlite
-description: |
+description: Edit SQLite schema with table definitions and migration files
 ---
 
 # Database Schema Edit (SQLite)

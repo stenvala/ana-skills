@@ -1,6 +1,6 @@
 ---
 name: code-simplifier
-description: |
+description: Review and simplify recently modified code preserving functionality
 ---
 
 # Code Simplifier

@@ -1,6 +1,6 @@
 ---
 name: frontend-forms
-description: |
+description: Create Angular 21 signal-based form components with validation
 ---
 
 # Frontend Forms Creation

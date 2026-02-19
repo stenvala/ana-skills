@@ -1,6 +1,6 @@
 ---
 name: database-design
-description: |
+description: Create data model documentation with ERD diagrams and business rules
 ---
 
 # Database Design

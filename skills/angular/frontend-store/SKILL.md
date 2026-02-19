@@ -1,6 +1,6 @@
 ---
 name: frontend-store
-description: |
+description: Create Angular store services using base stores for signal-based state
 ---
 
 # Frontend Store Creation

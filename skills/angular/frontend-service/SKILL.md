@@ -1,6 +1,6 @@
 ---
 name: frontend-service
-description: |
+description: Create Angular services that orchestrate API calls and state management
 ---
 
 # Frontend Service Creation

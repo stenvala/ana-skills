@@ -1,6 +1,6 @@
 ---
 name: database-model
-description: |
+description: Create SQLModel Python classes that map to database tables
 ---
 
 # Database Model Creation

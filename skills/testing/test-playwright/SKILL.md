@@ -1,6 +1,6 @@
 ---
 name: test-playwright
-description: |
+description: Create Playwright E2E tests using Page Object pattern for user workflows
 ---
 
 # E2E Test Creation

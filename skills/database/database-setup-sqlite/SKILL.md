@@ -1,6 +1,6 @@
 ---
 name: database-setup-sqlite
-description: |
+description: Set up SQLite database with setup script, schema, and migrations
 ---
 
 # Setup SQLite Database

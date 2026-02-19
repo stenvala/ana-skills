@@ -1,6 +1,6 @@
 ---
 name: database-setup-postgres
-description: |
+description: Set up PostgreSQL database with setup script and schema initialization
 ---
 
 # Setup PostgreSQL Database

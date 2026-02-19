@@ -1,6 +1,6 @@
 ---
 name: database-schema-edit-postgres
-description: |
+description: Edit PostgreSQL schema with table definitions and migration support
 ---
 
 # Database Schema Edit (PostgreSQL)

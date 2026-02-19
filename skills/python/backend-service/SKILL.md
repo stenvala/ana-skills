@@ -1,6 +1,6 @@
 ---
 name: backend-service
-description: |
+description: Create service classes for business logic and write operations
 ---
 
 # Backend Service Creation

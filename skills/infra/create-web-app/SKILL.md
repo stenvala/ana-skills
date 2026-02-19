@@ -1,6 +1,6 @@
 ---
 name: create-web-app
-description: |
+description: Scaffold full-stack project with Angular 21 and FastAPI backend
 ---
 
 # Create Project

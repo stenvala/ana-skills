@@ -1,6 +1,6 @@
 ---
 name: test-python-integration
-description: |
+description: Create pytest integration tests for complete API workflow validation
 ---
 
 # Integration Test Creation

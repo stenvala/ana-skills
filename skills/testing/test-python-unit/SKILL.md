@@ -1,6 +1,6 @@
 ---
 name: test-python-unit
-description: |
+description: Create pytest unit tests for backend services, repositories, and routers
 ---
 
 # Backend Test Creation

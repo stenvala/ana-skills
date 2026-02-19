@@ -1,6 +1,6 @@
 ---
 name: database-repository
-description: |
+description: Create repository classes for database operations using repository pattern
 ---
 
 # Database Repository Creation

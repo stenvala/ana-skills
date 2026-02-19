@@ -1,6 +1,6 @@
 ---
 name: mcc-ci-cd
-description: |
+description: Deploy Python/Angular apps to Linux with nginx, systemd, and rsync
 ---
 
 # MCC CI/CD Deployment Skill

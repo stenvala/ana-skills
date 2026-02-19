@@ -1,6 +1,6 @@
 ---
 name: backend-worker
-description: |
+description: Create background worker processes with database polling queues
 ---
 
 # Backend Worker Creation

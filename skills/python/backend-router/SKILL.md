@@ -1,6 +1,6 @@
 ---
 name: backend-router
-description: |
+description: Create FastAPI routers with DTOs, auth, and dependency injection
 ---
 
 # Backend Router Creation

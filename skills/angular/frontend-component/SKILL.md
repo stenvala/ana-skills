@@ -1,6 +1,6 @@
 ---
 name: frontend-component
-description: |
+description: Create Angular standalone components as route, presentational, or shared types
 ---
 
 # Frontend Component Creation

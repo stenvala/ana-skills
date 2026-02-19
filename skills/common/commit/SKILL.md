@@ -1,6 +1,6 @@
 ---
 name: commit
-description: |
+description: Review staged changes and create well-formatted commit messages
 ---
 
 # Write and Execute Commit Messages

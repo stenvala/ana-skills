@@ -1,6 +1,6 @@
 ---
 name: frontend-dialog
-description: |
+description: Create Angular Material dialog components with static open pattern
 ---
 
 # Frontend Dialog Creation
