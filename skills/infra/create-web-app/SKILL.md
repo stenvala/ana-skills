@@ -30,14 +30,89 @@ Before scaffolding, ask the user:
 ├── .nvmrc                          # Node.js version for nvm (20.19)
 ├── src/
 │   ├── ui/                          # Angular 21 frontend
+│   │   ├── .editorconfig            # Editor formatting rules
 │   │   ├── src/
+│   │   │   ├── styles.scss          # Design system entry point with Material theme
+│   │   │   ├── styles/              # Design system partials (19 SCSS files)
+│   │   │   │   ├── _variables.scss  # CSS custom properties
+│   │   │   │   ├── _base.scss       # Global styles
+│   │   │   │   ├── _layout.scss     # Flex utilities
+│   │   │   │   ├── _pages.scss      # Page containers
+│   │   │   │   ├── _components.scss # Tables, badges, dialogs
+│   │   │   │   ├── _cards.scss      # Card styles
+│   │   │   │   ├── _grids.scss      # Grid layouts
+│   │   │   │   ├── _forms.scss      # Form styles
+│   │   │   │   ├── _dialogs.scss    # Dialog styles
+│   │   │   │   ├── _buttons.scss    # Button/loading states
+│   │   │   │   ├── _alerts.scss     # Alert styles
+│   │   │   │   ├── _toolbar.scss    # Toolbar styles
+│   │   │   │   ├── _sections.scss   # Section styles
+│   │   │   │   ├── _chips.scss      # Chip/tag styles
+│   │   │   │   ├── _resize.scss     # Resize handles
+│   │   │   │   ├── _drag-drop.scss  # Drag-drop patterns
+│   │   │   │   ├── _lists.scss      # Selectable lists
+│   │   │   │   ├── _material-overrides.scss # Material overrides
+│   │   │   │   └── _badges.scss     # Badge system (20+ colors)
 │   │   │   ├── app/
-│   │   │   │   ├── core/            # Core module (interceptors, guards, services)
-│   │   │   │   ├── shared/          # Shared module (components, directives, pipes)
+│   │   │   │   ├── core/
+│   │   │   │   │   ├── stores/      # Signal-based state management
+│   │   │   │   │   │   ├── value.store.ts
+│   │   │   │   │   │   ├── object.store.ts
+│   │   │   │   │   │   ├── list.store.ts
+│   │   │   │   │   │   ├── list-store-with-object.store.ts
+│   │   │   │   │   │   └── index.ts
+│   │   │   │   │   ├── services/
+│   │   │   │   │   │   ├── core-nav.service.ts
+│   │   │   │   │   │   └── index.ts
+│   │   │   │   │   ├── interceptors/
+│   │   │   │   │   │   ├── auth.interceptor.ts
+│   │   │   │   │   │   └── index.ts
+│   │   │   │   │   ├── guards/
+│   │   │   │   │   │   └── index.ts
+│   │   │   │   │   ├── constants/
+│   │   │   │   │   │   ├── paths.ts  # Route paths (empty template)
+│   │   │   │   │   │   └── index.ts
+│   │   │   │   │   ├── components/
+│   │   │   │   │   │   ├── core-navbar/  # Navbar (empty template)
+│   │   │   │   │   │   └── index.ts
+│   │   │   │   │   ├── core.module.ts
+│   │   │   │   │   └── index.ts
+│   │   │   │   ├── shared/
+│   │   │   │   │   ├── components/  # 9 reusable components
+│   │   │   │   │   │   ├── shared-loading-overlay/
+│   │   │   │   │   │   ├── shared-loading-spinner/
+│   │   │   │   │   │   ├── shared-loading-state/
+│   │   │   │   │   │   ├── shared-loading-bar/
+│   │   │   │   │   │   ├── shared-confirm-dialog/
+│   │   │   │   │   │   ├── shared-empty-state/
+│   │   │   │   │   │   ├── shared-banner/
+│   │   │   │   │   │   ├── shared-search-input/
+│   │   │   │   │   │   ├── shared-badge/
+│   │   │   │   │   │   └── index.ts
+│   │   │   │   │   ├── directives/
+│   │   │   │   │   │   ├── shared-loading-button.directive.ts
+│   │   │   │   │   │   └── index.ts
+│   │   │   │   │   ├── pipes/       # 4 locale pipes
+│   │   │   │   │   │   ├── shared-date-format.pipe.ts
+│   │   │   │   │   │   ├── shared-time-format.pipe.ts
+│   │   │   │   │   │   ├── shared-number-format.pipe.ts
+│   │   │   │   │   │   ├── shared-currency-format.pipe.ts
+│   │   │   │   │   │   └── index.ts
+│   │   │   │   │   ├── services/    # 6 shared services
+│   │   │   │   │   │   ├── shared-locale.service.ts
+│   │   │   │   │   │   ├── shared-notification.service.ts
+│   │   │   │   │   │   ├── shared-loading.service.ts
+│   │   │   │   │   │   ├── shared-dialog-confirm.service.ts
+│   │   │   │   │   │   ├── shared-confirm.service.ts
+│   │   │   │   │   │   └── shared-control-state.service.ts
+│   │   │   │   │   ├── mat.module.ts
+│   │   │   │   │   ├── shared.module.ts
+│   │   │   │   │   └── index.ts
 │   │   │   │   ├── features/        # Feature modules
 │   │   │   │   ├── app.component.ts
 │   │   │   │   ├── app.component.html
 │   │   │   │   ├── app.component.scss
+│   │   │   │   ├── app.config.ts
 │   │   │   │   └── app.routes.ts
 │   │   │   ├── api-integration/     # Generated API services (from after_api_change.py)
 │   │   │   └── ...
@@ -101,7 +176,44 @@ Follow `references/angular-setup.md` to:
 - Create HTTP interceptor
 - Set up proxy configuration
 
-### 4. Create FastAPI Backend
+### 4. Install Angular Foundation Files
+
+After Angular project is initialized, copy the foundation template files:
+
+#### 4a. Core Foundation
+
+Follow `references/angular-core-foundation.md` - copy all files from `references/templates/core/` to `src/ui/src/app/core/`. This provides:
+- Signal-based state management stores (ValueStore, ObjectStore, ListStore, ListStoreWithObject)
+- Navigation service (CoreNavService)
+- Empty navbar placeholder
+- Empty route paths placeholder
+- Core NgModule
+
+#### 4b. Shared Foundation
+
+Follow `references/angular-shared-foundation.md` - copy all files from `references/templates/shared/` to `src/ui/src/app/shared/`. This provides:
+- Material module with all common imports
+- 9 reusable components (loading overlay/spinner/state/bar, confirm dialog, empty state, banner, search input, badge)
+- Loading button directive with confirmation pattern
+- 4 locale formatting pipes (date, time, number, currency)
+- 6 shared services (locale, notification, loading, dialog confirm, confirm, control state)
+
+#### 4c. Styles Foundation
+
+Follow `references/angular-styles-foundation.md`:
+- Copy `.editorconfig` to `src/ui/`
+- Copy `styles.scss` to `src/ui/src/` (replaces default)
+- Copy all `_*.scss` partials to `src/ui/src/styles/`
+- 19 style partials providing a complete design system with CSS custom properties, Material overrides, and utility classes
+
+#### 4d. App Foundation
+
+Follow `references/angular-app-foundation.md` - copy files from `references/templates/app/` to `src/ui/src/app/`, replacing Angular CLI defaults:
+- `app.component.ts/html/scss` - Root component with navbar visibility
+- `app.config.ts` - Application config with interceptor, router, animations, markdown
+- `app.routes.ts` - Empty routes placeholder
+
+### 5. Create FastAPI Backend
 
 Follow `references/fastapi-setup.md` to:
 
@@ -109,7 +221,7 @@ Follow `references/fastapi-setup.md` to:
 - Add hello world endpoint
 - Configure CORS for Angular dev server
 
-### 5. Create Worker (if needed)
+### 6. Create Worker (if needed)
 
 Follow `references/worker-setup.md` to:
 
@@ -118,7 +230,7 @@ Follow `references/worker-setup.md` to:
 - Create stub processor files
 - Configure database polling interval
 
-### 6. Create Development Scripts
+### 7. Create Development Scripts
 
 Follow `references/scripts-setup.md` to:
 
@@ -127,7 +239,7 @@ Follow `references/scripts-setup.md` to:
 - Create lint.py formatting tool
 - Create utils.py shared logger
 
-### 7. Create API Code Generator
+### 8. Create API Code Generator
 
 Follow `references/after-api-change-setup.md` to:
 
@@ -135,14 +247,14 @@ Follow `references/after-api-change-setup.md` to:
 - Configure API port for OpenAPI URL
 - Create api-integration directory structure
 
-### 8. Create pyproject.toml
+### 9. Create pyproject.toml
 
 Follow `references/pyproject-setup.md` to:
 
 - Create uv-managed pyproject.toml
 - Add FastAPI, uvicorn, and dev dependencies
 
-### 9. Initialize Project
+### 10. Initialize Project
 
 ```bash
 # Use correct Node.js version (if using nvm)
@@ -217,7 +329,12 @@ This pattern uses SQLite as the queue. No external message broker needed.
 
 See reference files for detailed templates:
 
-- `references/angular-setup.md` - Angular scaffolding
+- `references/angular-setup.md` - Angular CLI scaffolding and basic configuration
+- `references/angular-core-foundation.md` - Core module foundation (stores, nav service, navbar, paths)
+- `references/angular-shared-foundation.md` - Shared module foundation (components, pipes, directives, services)
+- `references/angular-styles-foundation.md` - Design system (styles.scss + 19 partials)
+- `references/angular-app-foundation.md` - App root files (component, config, routes)
+- `references/templates/` - Actual source files to copy into the project
 - `references/fastapi-setup.md` - FastAPI setup
 - `references/worker-setup.md` - Worker polling loop setup
 - `references/scripts-setup.md` - Python development scripts
