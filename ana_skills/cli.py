@@ -2,7 +2,7 @@
 
 import typer
 
-from ana_skills.commands.sync_cmd import sync_command
+from ana-skills.commands.sync_cmd import sync_command
 
 app = typer.Typer(
     name="ana-skills",

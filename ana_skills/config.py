@@ -7,7 +7,7 @@ from typing import Any
 
 import yaml
 
-from ana_skills.models import CONFIG_FILE, AgentFramework
+from ana-skills.models import CONFIG_FILE, AgentFramework
 
 
 def config_path(project_dir: Path) -> Path:

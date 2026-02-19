@@ -7,6 +7,7 @@ Portable AI agent skills for Claude Code, Cursor, and GitHub Copilot.
 ana-skills is a **skill library and sync tool** that packages development knowledge -- templates, workflows, conventions, and scripts -- into portable **skills** that work across AI agent environments. Instead of repeating instructions or maintaining separate rule files per editor, you define skills once and sync them wherever they're needed.
 
 Each skill is a self-contained package with:
+
 - **Instructions** (SKILL.md) -- what to do and when
 - **References** -- templates, patterns, and examples loaded into context
 - **Scripts** -- deterministic automation (scaffolding, validation)
@@ -50,10 +51,11 @@ uv sync
 
 ```bash
 # Interactive setup: choose your agent framework and select skills
-uv run ana_skills sync
+uv run ana-skills sync
 ```
 
 On first run, `sync` walks you through:
+
 1. **Agent selection** -- Claude Code, Cursor, or GitHub Copilot
 2. **Skill selection** -- browse by category, pick all or individual skills
 3. **Sync** -- copies selected skills to the correct location for your agent
@@ -66,7 +68,7 @@ Configuration is saved to `.ana-skills.yml` in your project root.
 
 ```bash
 # Re-sync all enabled skills (also detects newly added skills)
-uv run ana_skills sync
+uv run ana-skills sync
 ```
 
 Run `sync` after updating ana-skills to pick up new or changed skills. If new skills have been added to the library, you'll be prompted to enable them.
@@ -75,29 +77,29 @@ Run `sync` after updating ana-skills to pick up new or changed skills. If new sk
 
 ```bash
 # Interactively enable/disable skills
-uv run ana_skills add
+uv run ana-skills add
 ```
 
 Shows all available skills grouped by category with their current status. Toggle skills on or off -- newly enabled skills are synced immediately.
 
 ## Supported Agent Frameworks
 
-| Framework | Skills Location | Commands Location |
-|-----------|----------------|-------------------|
-| Claude Code | `.claude/skills/` | `.claude/commands/` |
-| Cursor | `.cursor/rules/` | `.cursor/commands/` |
-| GitHub Copilot | `.github/skills/` | `.github/prompts/` |
+| Framework      | Skills Location   | Commands Location   |
+| -------------- | ----------------- | ------------------- |
+| Claude Code    | `.claude/skills/` | `.claude/commands/` |
+| Cursor         | `.cursor/rules/`  | `.cursor/commands/` |
+| GitHub Copilot | `.github/skills/` | `.github/prompts/`  |
 
 ## Skill Library
 
-| Category | Skills | Purpose |
-|----------|--------|---------|
-| **Angular** | `frontend-component`, `frontend-dialog`, `frontend-forms`, `frontend-service`, `frontend-store` | UI components, dialogs, forms, services, state management |
-| **Python** | `backend-router`, `backend-service` | API routing, service layer |
-| **Database** | `database-design`, `database-model`, `database-repository`, `database-schema-edit-postgres`, `database-schema-edit-sqlite`, `database-setup-postgres`, `database-setup-sqlite` | Schema design, ORM models, repositories, migrations |
-| **Testing** | `test-playwright`, `test-python-integration`, `test-python-unit` | E2E, integration, and unit testing |
-| **Infrastructure** | `create-web-app`, `mcc-ci-cd` | Project scaffolding, CI/CD pipelines |
-| **Common** | `commit`, `code-simplifier`, `skill-creator` | Git conventions, refactoring, creating new skills |
+| Category           | Skills                                                                                                                                                                         | Purpose                                                   |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| **Angular**        | `frontend-component`, `frontend-dialog`, `frontend-forms`, `frontend-service`, `frontend-store`                                                                                | UI components, dialogs, forms, services, state management |
+| **Python**         | `backend-router`, `backend-service`                                                                                                                                            | API routing, service layer                                |
+| **Database**       | `database-design`, `database-model`, `database-repository`, `database-schema-edit-postgres`, `database-schema-edit-sqlite`, `database-setup-postgres`, `database-setup-sqlite` | Schema design, ORM models, repositories, migrations       |
+| **Testing**        | `test-playwright`, `test-python-integration`, `test-python-unit`                                                                                                               | E2E, integration, and unit testing                        |
+| **Infrastructure** | `create-web-app`, `mcc-ci-cd`                                                                                                                                                  | Project scaffolding, CI/CD pipelines                      |
+| **Common**         | `commit`, `code-simplifier`, `skill-creator`                                                                                                                                   | Git conventions, refactoring, creating new skills         |
 
 ## Skill Structure
 

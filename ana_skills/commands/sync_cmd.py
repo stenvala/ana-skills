@@ -1,4 +1,4 @@
-"""ana_skills sync -- sync skills to the target project."""
+"""ana-skills sync -- sync skills to the target project."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from ana_skills.config import (
+from ana-skills.config import (
     config_exists,
     get_agent,
     get_all_configured_skills,
@@ -15,9 +15,9 @@ from ana_skills.config import (
     load_config,
     save_config,
 )
-from ana_skills.models import AgentFramework
-from ana_skills.resources import get_all_skill_names, list_all_skills
-from ana_skills.sync import sync_skills
+from ana-skills.models import AgentFramework
+from ana-skills.resources import get_all_skill_names, list_all_skills
+from ana-skills.sync import sync_skills
 
 console = Console()
 

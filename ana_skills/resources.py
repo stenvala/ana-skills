@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 
-# In installed mode, skills are at ana_skills/skills/ (via hatchling force-include).
+# In installed mode, skills are at ana-skills/skills/ (via hatchling force-include).
 # In dev mode, skills are at the repo root skills/ directory.
 _pkg_skills = Path(__file__).parent / "skills"
 _repo_skills = Path(__file__).parent.parent / "skills"
@@ -29,9 +29,7 @@ def list_skills_in_family(family: str) -> list[str]:
     if not family_dir.exists():
         return []
     return sorted(
-        d.name
-        for d in family_dir.iterdir()
-        if d.is_dir() and (d / "SKILL.md").exists()
+        d.name for d in family_dir.iterdir() if d.is_dir() and (d / "SKILL.md").exists()
     )
 
 
