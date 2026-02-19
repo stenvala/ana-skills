@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ana-skills"
+version = "0.1.0"
+description = "Sync agent skills to projects for Claude, Cursor, and GitHub Copilot"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+    { name = "Antti Stenvall" },
+]
+dependencies = [
+    "typer>=0.15.0",
+    "rich>=13.0.0",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+ana_skills = "ana_skills.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ana_skills"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"skills" = "ana_skills/skills"

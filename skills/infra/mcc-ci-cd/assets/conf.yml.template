@@ -1,0 +1,82 @@
+# MCC CI/CD Configuration Template
+# Copy this file to conf.yml and customize for your project
+
+# =============================================================================
+# Server Connection
+# =============================================================================
+REMOTE_USER: username
+REMOTE_HOST: server.example.com
+REMOTE_BASE: /home/username/live/myapp
+
+# =============================================================================
+# File Ownership (web server user)
+# =============================================================================
+DIR_USER: www-data
+DIR_GROUP: username
+
+# =============================================================================
+# Build Paths (relative to mcc/ directory)
+# =============================================================================
+LOCAL_API_DIR: "../dist/api"
+LOCAL_UI_DIR: "../dist/ui"
+
+# =============================================================================
+# Remote Paths (use {{VARIABLE}} for template substitution)
+# =============================================================================
+API_REMOTE_BUILDS: "{{REMOTE_BASE}}/api"
+API_SYMLINK: "{{REMOTE_BASE}}/current-api"
+UI_REMOTE_BUILDS: "{{REMOTE_BASE}}/ui"
+UI_SYMLINK: "{{REMOTE_BASE}}/current-ui"
+
+# =============================================================================
+# Deployment Settings
+# =============================================================================
+KEEP_BUILDS: 10
+SERVICE_NAME: myapp.service
+EMAIL: admin@example.com
+
+# =============================================================================
+# Domain Configuration
+# =============================================================================
+# Option A: Single domain (PostgreSQL mode)
+DOMAIN: "myapp.example.com"
+NGINX_CONF: "{{DOMAIN}}"
+
+# Option B: Multi-domain (SQLite mode) - uncomment and remove DOMAIN/NGINX_CONF above
+# DOMAINS:
+#   - domain1.example.com
+#   - domain2.example.com
+#   - domain3.example.com
+
+# =============================================================================
+# PostgreSQL Configuration (only for single-domain PostgreSQL mode)
+# =============================================================================
+# Uncomment and configure if using PostgreSQL
+# DB_HOST: 192.168.0.150
+# DB_PORT: 5432
+# DB_NAME: postgres
+# DB_USER: postgres
+# DB_PASSWORD: postgres
+# DB_SCHEMA_SUFFIX: main
+# DB_LOCAL_NETWORK: 192.168.0.0/24
+
+# =============================================================================
+# Cron Jobs (optional - defaults to daily backup at 3 AM)
+# =============================================================================
+# CRON_JOBS:
+#   - name: db-backup
+#     hour: 3
+#     minute: 0
+#     scripts_dir: "{{REMOTE_BASE}}/scripts"
+#     commands:
+#       - backup_db.py
+#     env_vars:
+#       BACKUP_DIR: "{{REMOTE_BASE}}/db-backups"
+#   - name: data-sync
+#     hour: 7
+#     minute: 0
+#     scripts_dir: "{{REMOTE_BASE}}/scripts/sync"
+#     commands:
+#       - download_data.py
+#       - sync_calendar.py
+#     env_vars: {}
