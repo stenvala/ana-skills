@@ -5,18 +5,25 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button matButton="outlined" type="button" (click)="onCancel()" data-t-id="dialog-cancel">
+  <button
+    matButton
+    class="btn-cancel"
+    type="button"
+    (click)="onCancel()"
+    data-t-id="dialog-cancel"
+  >
     <mat-icon>close</mat-icon>
-    {{ data.cancelText || 'Peruuta' }}
+    {{ data.cancelText || "Peruuta" }}
   </button>
   <button
-    matButton="filled"
+    matButton
+    class="btn-action"
     type="button"
     [class.btn-destructive]="data.confirmColor === 'warn'"
     (click)="onConfirm()"
     data-t-id="dialog-confirm"
   >
-    <mat-icon>{{ data.confirmColor === 'warn' ? 'delete' : 'check' }}</mat-icon>
-    {{ data.confirmText || 'Vahvista' }}
+    <mat-icon>{{ data.confirmColor === "warn" ? "delete" : "check" }}</mat-icon>
+    {{ data.confirmText || "Vahvista" }}
   </button>
 </mat-dialog-actions>

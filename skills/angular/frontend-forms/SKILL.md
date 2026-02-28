@@ -49,16 +49,13 @@ import { Component, signal, computed, ChangeDetectionStrategy, inject } from '@a
 // Signal forms
 import { form, FormField, required, email, minLength, maxLength, pattern, min, max } from '@angular/forms/signals';
 
-// Material (unchanged)
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDialogModule, MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+// Dialog types (for DI - NOT module imports)
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-// Loading button directive
-import { SharedLoadingButtonDirective } from '@shared/directives/shared-loading-button.directive';
+// App modules (always use these - never import Mat* modules individually)
+import { CoreModule } from '@core/core.module';
+import { MaterialModule } from '@shared/material';
+import { SharedModule } from '@shared/shared.module';
 ```
 
 ## Instructions
@@ -87,10 +84,10 @@ private readonly formModel = signal<MyFormModel>({
 
 ```typescript
 protected readonly myForm = form(this.formModel, (f) => {
-  required(f.name, { message: 'Nimi on pakollinen' });
-  maxLength(f.name, 100, { message: 'Nimi voi olla enintään 100 merkkiä' });
-  required(f.email, { message: 'Sähköposti on pakollinen' });
-  email(f.email, { message: 'Virheellinen sähköpostiosoite' });
+  required(f.name, { message: 'Name is required' });
+  maxLength(f.name, 100, { message: 'Name must be at most 100 characters' });
+  required(f.email, { message: 'Email is required' });
+  email(f.email, { message: 'Invalid email address' });
 });
 ```
 
@@ -98,7 +95,7 @@ protected readonly myForm = form(this.formModel, (f) => {
 
 ```html
 <mat-form-field appearance="outline" class="full-width">
-  <mat-label>Nimi</mat-label>
+  <mat-label>Name</mat-label>
   <input matInput [formField]="myForm.name" />
   @if (myForm.name().invalid() && myForm.name().touched()) {
     @for (error of myForm.name().errors(); track error.kind) {
@@ -134,7 +131,7 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 
 ### Validation
 5. **Schema validators**: Use `required()`, `email()`, `minLength()`, etc. from `@angular/forms/signals`
-6. **Finnish messages**: All validation messages MUST be in Finnish
+6. **English messages**: All validation messages MUST be in English
 7. **Multiple validators**: Chain multiple validators for the same field
 
 ### Template Binding
@@ -148,10 +145,10 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 13. **Computed signals**: Use `computed()` to derive state from form model - no subscriptions
 
 ### Button Rules (CRITICAL)
-14. **Button variants for dialogs/forms**:
-    - `matButton="filled"` - Submit/Save buttons (primary action)
-    - `matButton="outlined"` - Cancel/Back buttons (secondary action)
-    - See `/frontend-component` SKILL.md for full button type guide
+14. **Button styling**: All buttons use bare `matButton` (no value) with CSS classes for color:
+    - `class="btn-action"` - Submit/Save buttons (yellow, primary action)
+    - `class="btn-cancel"` - Cancel/Back buttons (gray, secondary action)
+    - See `/frontend-design-system` for full button type and color class guide
 15. **Loading button**: ALL async buttons MUST use `sharedLoadingButton` directive with `(loadingClick)`
 16. **Icons required**: ALL buttons MUST have icon-only OR icon with text (text-only buttons prohibited)
 17. **No canSubmit computed**: Do NOT create `canSubmit = computed(() => form().valid() && !isSubmitting())` - use `[disabled]="!myForm().valid()"` and let directive handle loading
@@ -159,13 +156,13 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 **Standard dialog actions pattern:**
 ```html
 <mat-dialog-actions align="end">
-  <button matButton="outlined" type="button" (click)="onCancel()">
+  <button matButton class="btn-cancel" type="button" (click)="onCancel()">
     <mat-icon>close</mat-icon>
-    Peruuta
+    Cancel
   </button>
-  <button matButton="filled" type="button" [disabled]="!myForm().valid()" (click)="onSubmit()">
+  <button matButton class="btn-action" type="button" [disabled]="!myForm().valid()" (click)="onSubmit()">
     <mat-icon>save</mat-icon>
-    Tallenna
+    Save
   </button>
 </mat-dialog-actions>
 ```
@@ -181,13 +178,13 @@ import { required, email, minLength, maxLength, min, max, pattern } from '@angul
 
 // Usage in form() second parameter
 protected readonly myForm = form(this.formModel, (f) => {
-  required(f.email, { message: 'Sähköposti on pakollinen' });
-  email(f.email, { message: 'Virheellinen sähköpostiosoite' });
-  minLength(f.password, 8, { message: 'Salasanan on oltava vähintään 8 merkkiä' });
-  maxLength(f.name, 100, { message: 'Nimi voi olla enintään 100 merkkiä' });
-  min(f.amount, 0, { message: 'Summan on oltava positiivinen' });
-  max(f.amount, 1000000, { message: 'Summa on liian suuri' });
-  pattern(f.code, /^[A-Z0-9]+$/, { message: 'Koodi saa sisältää vain isoja kirjaimia ja numeroita' });
+  required(f.email, { message: 'Email is required' });
+  email(f.email, { message: 'Invalid email address' });
+  minLength(f.password, 8, { message: 'Password must be at least 8 characters' });
+  maxLength(f.name, 100, { message: 'Name must be at most 100 characters' });
+  min(f.amount, 0, { message: 'Amount must be positive' });
+  max(f.amount, 1000000, { message: 'Amount is too large' });
+  pattern(f.code, /^[A-Z0-9]+$/, { message: 'Code may only contain uppercase letters and numbers' });
 });
 ```
 
@@ -196,7 +193,7 @@ protected readonly myForm = form(this.formModel, (f) => {
 ### Text Input
 ```html
 <mat-form-field appearance="outline">
-  <mat-label>Nimi</mat-label>
+  <mat-label>Name</mat-label>
   <input matInput [formField]="myForm.name" />
   @if (myForm.name().invalid() && myForm.name().touched()) {
     @for (error of myForm.name().errors(); track error.kind) {
@@ -209,7 +206,7 @@ protected readonly myForm = form(this.formModel, (f) => {
 ### Select Dropdown
 ```html
 <mat-form-field appearance="outline">
-  <mat-label>Kategoria</mat-label>
+  <mat-label>Category</mat-label>
   <mat-select [formField]="myForm.categoryId">
     @for (category of categories(); track category.id) {
       <mat-option [value]="category.id">{{ category.name }}</mat-option>
@@ -225,13 +222,13 @@ protected readonly myForm = form(this.formModel, (f) => {
 
 ### Checkbox
 ```html
-<mat-checkbox [formField]="myForm.isActive">Aktiivinen</mat-checkbox>
+<mat-checkbox [formField]="myForm.isActive">Active</mat-checkbox>
 ```
 
 ### Date Picker
 ```html
 <mat-form-field appearance="outline">
-  <mat-label>Päivämäärä</mat-label>
+  <mat-label>Date</mat-label>
   <input matInput [matDatepicker]="picker" [formField]="myForm.date" />
   <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
   <mat-datepicker #picker></mat-datepicker>
@@ -241,7 +238,7 @@ protected readonly myForm = form(this.formModel, (f) => {
 ### Autocomplete
 ```html
 <mat-form-field appearance="outline">
-  <mat-label>Toimittaja</mat-label>
+  <mat-label>Vendor</mat-label>
   <input matInput [formField]="myForm.vendor" [matAutocomplete]="vendorAuto" />
   <mat-autocomplete #vendorAuto="matAutocomplete">
     @for (option of filteredVendors(); track option) {

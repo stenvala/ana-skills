@@ -107,7 +107,9 @@ This ensures:
 - Room for pagination metadata (total, offset, limit)
 - TypeScript can properly type the response
 
-## Dependency Registration
+## Dependency Registration (CRITICAL)
+
+**IMPORTANT**: Services must be injected in routers, NOT database sessions.
 
 Add service dependency in `src/api/dependencies/<domain>.py`:
 
@@ -117,7 +119,7 @@ from sqlmodel import Session
 
 from shared.services.<domain>.<feature>_service import <Feature>Service
 from shared.services.<domain>.audit_trail_service import AuditTrailService
-from .core import get_db_session
+from .database import get_db_session
 
 
 def get_<feature>_service(
@@ -126,6 +128,19 @@ def get_<feature>_service(
 ) -> <Feature>Service:
     """Get <Feature>Service instance for current request."""
     return <Feature>Service(session=session, audit_trail=audit_trail)
+```
+
+Then in your router, inject the SERVICE, not the Session:
+
+```python
+def get_feature(
+    feature_id: str,
+    service: <Feature>Service = Depends(get_<feature>_service),  # ✅ CORRECT
+) -> <Feature>DTO:
+    return service.get_by_id(feature_id)
+
+# ❌ WRONG - Never do this:
+# def get_feature(session: Session = Depends(get_db_session)):
 ```
 
 ## Router Registration (src/api/main.py)

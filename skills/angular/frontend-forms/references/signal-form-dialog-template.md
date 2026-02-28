@@ -9,13 +9,11 @@ Dialog with form for creating/editing data using Angular 21 signal-based forms.
 ```typescript
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { form, FormField, required, maxLength } from '@angular/forms/signals';
-import { MatDialog, MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
-import { SharedLoadingButtonDirective } from '@shared/directives/shared-loading-button.directive';
+import { CoreModule } from '@core/core.module';
+import { MaterialModule } from '@shared/material';
+import { SharedModule } from '@shared/shared.module';
 
 /**
  * Input data for the dialog
@@ -44,15 +42,7 @@ interface ItemFormModel {
 
 @Component({
   selector: 'feature-dialog-item',
-  imports: [
-    FormField,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    SharedLoadingButtonDirective,
-  ],
+  imports: [CoreModule, MaterialModule, SharedModule, FormField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './feature-dialog-item.component.html',
 })
@@ -61,7 +51,7 @@ export class FeatureDialogItemComponent {
   protected readonly data = inject<FeatureDialogItemInputData>(MAT_DIALOG_DATA);
 
   protected readonly isEditMode = !!this.data.item;
-  protected readonly dialogTitle = this.isEditMode ? 'Muokkaa' : 'Luo uusi';
+  protected readonly dialogTitle = this.isEditMode ? 'Edit' : 'Create';
 
   // Form model as signal
   private readonly formModel = signal<ItemFormModel>({
@@ -70,8 +60,8 @@ export class FeatureDialogItemComponent {
 
   // Field tree with validation
   protected readonly itemForm = form(this.formModel, (f) => {
-    required(f.name, { message: 'Nimi on pakollinen' });
-    maxLength(f.name, 100, { message: 'Nimi voi olla enintään 100 merkkiä' });
+    required(f.name, { message: 'Name is required' });
+    maxLength(f.name, 100, { message: 'Name must be at most 100 characters' });
   });
 
   protected onCancel(): void {
@@ -111,7 +101,7 @@ export class FeatureDialogItemComponent {
 
 <mat-dialog-content>
   <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Nimi</mat-label>
+    <mat-label>Name</mat-label>
     <input matInput [formField]="itemForm.name" data-test-id="input-name" />
     @if (itemForm.name().invalid() && itemForm.name().touched()) {
       @for (error of itemForm.name().errors(); track error.kind) {
@@ -122,17 +112,17 @@ export class FeatureDialogItemComponent {
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button matButton="outlined" type="button" (click)="onCancel()" data-test-id="btn-cancel">
+  <button matButton class="btn-cancel" type="button" (click)="onCancel()" data-test-id="btn-cancel">
     <mat-icon>close</mat-icon>
-    Peruuta
+    Cancel
   </button>
-  <button matButton="filled"
+  <button matButton class="btn-action"
           sharedLoadingButton
           [disabled]="!itemForm().valid()"
           (loadingClick)="onSubmit()"
           data-test-id="btn-submit">
     <mat-icon>save</mat-icon>
-    {{ isEditMode ? 'Päivitä' : 'Luo' }}
+    {{ isEditMode ? 'Update' : 'Create' }}
   </button>
 </mat-dialog-actions>
 ```
@@ -146,14 +136,11 @@ Dialog with multiple form fields including select dropdown.
 ```typescript
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { form, FormField, required, maxLength } from '@angular/forms/signals';
-import { MatDialog, MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
-import { SharedLoadingButtonDirective } from '@shared/directives/shared-loading-button.directive';
+import { CoreModule } from '@core/core.module';
+import { MaterialModule } from '@shared/material';
+import { SharedModule } from '@shared/shared.module';
 
 export interface FeatureDialogComplexInputData {
   item?: {
@@ -179,16 +166,7 @@ interface ComplexFormModel {
 
 @Component({
   selector: 'feature-dialog-complex',
-  imports: [
-    FormField,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    SharedLoadingButtonDirective,
-  ],
+  imports: [CoreModule, MaterialModule, SharedModule, FormField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './feature-dialog-complex.component.html',
 })
@@ -205,11 +183,11 @@ export class FeatureDialogComplexComponent {
   });
 
   protected readonly complexForm = form(this.formModel, (f) => {
-    required(f.code, { message: 'Koodi on pakollinen' });
-    maxLength(f.code, 20, { message: 'Koodi voi olla enintään 20 merkkiä' });
-    required(f.name, { message: 'Nimi on pakollinen' });
-    maxLength(f.name, 100, { message: 'Nimi voi olla enintään 100 merkkiä' });
-    required(f.categoryId, { message: 'Kategoria on pakollinen' });
+    required(f.code, { message: 'Code is required' });
+    maxLength(f.code, 20, { message: 'Code must be at most 20 characters' });
+    required(f.name, { message: 'Name is required' });
+    maxLength(f.name, 100, { message: 'Name must be at most 100 characters' });
+    required(f.categoryId, { message: 'Category is required' });
   });
 
   protected onCancel(): void {
@@ -242,11 +220,11 @@ export class FeatureDialogComplexComponent {
 ### HTML Template
 
 ```html
-<h2 mat-dialog-title>{{ isEditMode ? 'Muokkaa' : 'Luo uusi' }}</h2>
+<h2 mat-dialog-title>{{ isEditMode ? 'Edit' : 'Create' }}</h2>
 
 <mat-dialog-content>
   <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Koodi</mat-label>
+    <mat-label>Code</mat-label>
     <input matInput [formField]="complexForm.code" data-test-id="input-code" />
     @if (complexForm.code().invalid() && complexForm.code().touched()) {
       @for (error of complexForm.code().errors(); track error.kind) {
@@ -256,7 +234,7 @@ export class FeatureDialogComplexComponent {
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Nimi</mat-label>
+    <mat-label>Name</mat-label>
     <input matInput [formField]="complexForm.name" data-test-id="input-name" />
     @if (complexForm.name().invalid() && complexForm.name().touched()) {
       @for (error of complexForm.name().errors(); track error.kind) {
@@ -266,7 +244,7 @@ export class FeatureDialogComplexComponent {
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Kategoria</mat-label>
+    <mat-label>Category</mat-label>
     <mat-select [formField]="complexForm.categoryId" data-test-id="select-category">
       @for (category of data.categories; track category.id) {
         <mat-option [value]="category.id">{{ category.name }}</mat-option>
@@ -281,17 +259,17 @@ export class FeatureDialogComplexComponent {
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button matButton="outlined" type="button" (click)="onCancel()" data-test-id="btn-cancel">
+  <button matButton class="btn-cancel" type="button" (click)="onCancel()" data-test-id="btn-cancel">
     <mat-icon>close</mat-icon>
-    Peruuta
+    Cancel
   </button>
-  <button matButton="filled"
+  <button matButton class="btn-action"
           sharedLoadingButton
           [disabled]="!complexForm().valid()"
           (loadingClick)="onSubmit()"
           data-test-id="btn-submit">
     <mat-icon>save</mat-icon>
-    {{ isEditMode ? 'Päivitä' : 'Luo' }}
+    {{ isEditMode ? 'Update' : 'Create' }}
   </button>
 </mat-dialog-actions>
 ```

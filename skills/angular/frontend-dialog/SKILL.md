@@ -33,20 +33,34 @@ Create Angular Material dialog components following the static open pattern with
 
 ## Instructions
 
-### 1. Create Dialog Component
+### 1. Scaffold Dialog Component
 
-Create the TypeScript file with:
-- Input and Output interface definitions
-- Component class with static `open()` method
-- Form handling (if applicable)
-- Cancel and submit handlers
+Run the init script to create the file structure:
 
-### 2. Create HTML Template
+```bash
+python .claude/skills/frontend-dialog/scripts/init_frontend_dialog.py <feature> <dialog-name>
+```
 
-Create the template with:
-- `mat-dialog-title` for header
-- `mat-dialog-content` for body
-- `mat-dialog-actions` for buttons
+Example:
+```bash
+python .claude/skills/frontend-dialog/scripts/init_frontend_dialog.py accounting edit-bank-account
+```
+
+This generates:
+- `src/ui/src/app/features/<feature>/components/<feature>-dialog-<name>/<feature>-dialog-<name>.component.ts`
+- `src/ui/src/app/features/<feature>/components/<feature>-dialog-<name>/<feature>-dialog-<name>.component.html`
+
+The generated skeleton uses Pattern B (service call inside dialog). See `references/dialog-template.md` for the complete pattern reference.
+
+### 2. Complete the Component
+
+Fill in the generated TODOs:
+- Define InputData and OutputData interfaces
+- Define FormModel interface and form fields
+- Add validators to `form()`
+- Inject your feature service and `SharedNotificationService`
+- Implement save logic in `onSubmit` (Pattern B)
+- Add form fields to HTML template
 
 ### 3. Export from Feature Index
 
@@ -82,8 +96,8 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 13. **Validate before close**: Only close with data after form validation passes
 
 ### Module Imports
-14. **Dialog modules**: Import `MatDialogModule` directly (not via MaterialModule)
-15. **Standalone**: Dialogs are standalone components
+14. **Use shared modules**: Always import `[CoreModule, MaterialModule, SharedModule, FormField]` for form dialogs or `[CoreModule, MaterialModule, SharedModule]` for simple dialogs — never import Mat\* modules individually
+15. **Dialog DI imports**: Import `MAT_DIALOG_DATA`, `MatDialogRef`, `MatDialog` as TypeScript value imports for dependency injection (not as module imports)
 
 ### Form Dialogs
 **IMPORTANT**: For dialogs with forms, use the `/frontend-forms` skill instead. That skill provides signal-based forms patterns with proper validation, button styling, and loading states.

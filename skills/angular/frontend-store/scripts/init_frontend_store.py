@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Initialize a dummy Angular state service (store) file.
+Initialize a dummy Angular store file.
 
 Usage:
     python .claude/skills/frontend-store/scripts/init_frontend_store.py <feature> <entity-name>
@@ -10,7 +10,7 @@ Example:
 
 This creates:
     src/ui/src/app/features/accounting/services/
-        accounting-document-state.service.ts
+        accounting-document.store.ts
 """
 
 import os
@@ -31,7 +31,7 @@ def create_store_file(feature: str, entity_name: str):
 
     # Paths
     base_path = Path("src/ui/src/app/features") / feature / "services"
-    state_file = base_path / f"{feature}-{entity_name}-state.service.ts"
+    state_file = base_path / f"{feature}-{entity_name}.store.ts"
 
     # Create directory
     base_path.mkdir(parents=True, exist_ok=True)
@@ -47,7 +47,7 @@ type {entity_pascal}DTO = {{ id: string }};
 type {entity_pascal}SummaryDTO = {{ id: string; name: string }};
 
 @Injectable({{ providedIn: 'root' }})
-export class {feature_pascal}{entity_pascal}StateService {{
+export class {feature_pascal}{entity_pascal}Store {{
   /**
    * LIST STORE: Contains summary objects for list views.
    * - Keyed by search criteria (e.g., fiscalYearId, or 'all')
@@ -133,10 +133,10 @@ export class {feature_pascal}{entity_pascal}StateService {{
     # Write file
     state_file.write_text(state_content)
 
-    print(f"Created state service file:")
+    print(f"Created store file:")
     print(f"  {state_file}")
     print()
-    print(f"State Service: {feature_pascal}{entity_pascal}StateService")
+    print(f"Store: {feature_pascal}{entity_pascal}Store")
     print()
     print("TODO:")
     print("  1. Import DTOs from @api/index")

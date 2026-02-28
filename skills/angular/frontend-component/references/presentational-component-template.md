@@ -100,13 +100,13 @@ export class ItemListViewerComponent {
 <!-- No route-container - parent handles layout -->
 <div class="item-list-viewer" data-test-id="item-list-viewer">
   @if (showEmptyState()) {
-  <shared-empty-content
+  <shared-empty-state
     icon="folder_open"
     title="No Items"
-    description="No items to display."
+    message="No items to display."
     data-test-id="empty-state"
-  >
-  </shared-empty-content>
+  />
+
   } @else { @for (item of items(); track trackByItemId($index, item)) {
   <div class="item-row" (click)="onItemClick(item)" data-test-id="item-row-{{ item.id }}">
     <div class="item-content">
@@ -124,7 +124,8 @@ export class ItemListViewerComponent {
       } @else {
       <!-- Default actions -->
       <button
-        mat-icon-button
+        matButton
+        class="only-icon"
         (click)="onDelete(item.id); $event.stopPropagation()"
         data-test-id="delete-btn-{{ item.id }}"
       >
@@ -153,7 +154,7 @@ imports: [CoreModule, MaterialModule, SharedModule, ItemListViewerComponent],
 >
   <!-- Optional custom actions template -->
   <ng-template #itemActions let-item>
-    <button mat-icon-button (click)="onEdit(item)">
+    <button matButton class="only-icon" (click)="onEdit(item)">
       <mat-icon>edit</mat-icon>
     </button>
   </ng-template>

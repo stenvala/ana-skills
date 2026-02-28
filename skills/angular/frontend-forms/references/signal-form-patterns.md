@@ -9,21 +9,21 @@ import { required, email, minLength, maxLength, min, max, pattern } from '@angul
 
 protected readonly myForm = form(this.formModel, (f) => {
   // Required field
-  required(f.name, { message: 'Nimi on pakollinen' });
+  required(f.name, { message: 'Name is required' });
 
   // Email validation
-  email(f.email, { message: 'Virheellinen sähköpostiosoite' });
+  email(f.email, { message: 'Invalid email address' });
 
   // Length constraints
-  minLength(f.password, 8, { message: 'Salasanan on oltava vähintään 8 merkkiä' });
-  maxLength(f.name, 100, { message: 'Nimi voi olla enintään 100 merkkiä' });
+  minLength(f.password, 8, { message: 'Password must be at least 8 characters' });
+  maxLength(f.name, 100, { message: 'Name must be at most 100 characters' });
 
   // Numeric constraints
-  min(f.amount, 0, { message: 'Summan on oltava positiivinen' });
-  max(f.amount, 1000000, { message: 'Summa on liian suuri' });
+  min(f.amount, 0, { message: 'Amount must be positive' });
+  max(f.amount, 1000000, { message: 'Amount is too large' });
 
   // Pattern matching
-  pattern(f.code, /^[A-Z0-9]+$/, { message: 'Koodi saa sisältää vain isoja kirjaimia ja numeroita' });
+  pattern(f.code, /^[A-Z0-9]+$/, { message: 'Code may only contain uppercase letters and numbers' });
 });
 ```
 
@@ -31,7 +31,7 @@ protected readonly myForm = form(this.formModel, (f) => {
 
 ```html
 <mat-form-field appearance="outline">
-  <mat-label>Sähköposti</mat-label>
+  <mat-label>Email</mat-label>
   <input matInput [formField]="myForm.email" />
   @if (myForm.email().invalid() && myForm.email().touched()) {
     @for (error of myForm.email().errors(); track error.kind) {
@@ -46,9 +46,9 @@ protected readonly myForm = form(this.formModel, (f) => {
 ```typescript
 protected readonly myForm = form(this.formModel, (f) => {
   // Chain multiple validators
-  required(f.email, { message: 'Sähköposti on pakollinen' });
-  email(f.email, { message: 'Virheellinen sähköpostiosoite' });
-  maxLength(f.email, 255, { message: 'Sähköposti on liian pitkä' });
+  required(f.email, { message: 'Email is required' });
+  email(f.email, { message: 'Invalid email address' });
+  maxLength(f.email, 255, { message: 'Email is too long' });
 });
 ```
 
@@ -58,11 +58,13 @@ protected readonly myForm = form(this.formModel, (f) => {
 
 ### Button Variant Mapping
 
-| Button Purpose | Variant | Example |
-|---------------|---------|---------|
-| Primary action (save, confirm, search, fetch) | `matButton="filled"` | Save, Submit, Search |
-| Cancel/dismiss action | `matButton="outlined"` | Cancel, Close, Dismiss |
-| Navigation/open dialog to add something | `matButton="elevated"` | Add New, Create, Open |
+| Button Purpose | Directive + CSS Class | Example |
+|---------------|----------------------|---------|
+| Primary action (save, confirm, search, fetch) | `matButton class="btn-action"` | Save, Submit, Search |
+| Cancel/dismiss action | `matButton class="btn-cancel"` | Cancel, Close, Dismiss |
+| Destructive action | `matButton class="btn-destructive"` | Delete, Remove |
+
+See `/frontend-design-system` for the full button system with all CSS color classes.
 
 ### CRITICAL: Icon Requirements
 
@@ -72,21 +74,15 @@ protected readonly myForm = form(this.formModel, (f) => {
 
 ```html
 <!-- Primary action -->
-<button matButton="filled" sharedLoadingButton (loadingClick)="onSave()">
+<button matButton class="btn-action" sharedLoadingButton (loadingClick)="onSave()">
   <mat-icon>save</mat-icon>
-  Tallenna
+  Save
 </button>
 
 <!-- Cancel action -->
-<button matButton="outlined" (click)="onCancel()">
+<button matButton class="btn-cancel" (click)="onCancel()">
   <mat-icon>close</mat-icon>
-  Peruuta
-</button>
-
-<!-- Navigation/add action -->
-<button matButton="elevated" (click)="onAdd()">
-  <mat-icon>add</mat-icon>
-  Lisää uusi
+  Cancel
 </button>
 ```
 
@@ -94,18 +90,13 @@ protected readonly myForm = form(this.formModel, (f) => {
 
 ```html
 <!-- Icon-only save -->
-<button matButton="filled" sharedLoadingButton (loadingClick)="onSave()">
+<button matButton class="btn-action only-icon" sharedLoadingButton (loadingClick)="onSave()">
   <mat-icon>save</mat-icon>
 </button>
 
 <!-- Icon-only close -->
-<button matButton="outlined" (click)="onClose()">
+<button matButton class="only-icon btn-cancel" (click)="onClose()">
   <mat-icon>close</mat-icon>
-</button>
-
-<!-- Icon-only add -->
-<button matButton="elevated" (click)="onAdd()">
-  <mat-icon>add</mat-icon>
 </button>
 ```
 
@@ -113,16 +104,16 @@ protected readonly myForm = form(this.formModel, (f) => {
 
 ```html
 <mat-dialog-actions align="end">
-  <button matButton="outlined" type="button" (click)="onCancel()">
+  <button matButton class="btn-cancel" type="button" (click)="onCancel()">
     <mat-icon>close</mat-icon>
-    Peruuta
+    Cancel
   </button>
-  <button matButton="filled"
+  <button matButton class="btn-action"
           sharedLoadingButton
           [disabled]="!myForm().valid()"
           (loadingClick)="onSubmit()">
     <mat-icon>save</mat-icon>
-    Tallenna
+    Save
   </button>
 </mat-dialog-actions>
 ```
@@ -130,12 +121,12 @@ protected readonly myForm = form(this.formModel, (f) => {
 ### Destructive Action with Confirmation
 
 ```html
-<button matButton="filled"
+<button matButton class="btn-destructive"
         sharedLoadingButton
         [confirm]="true"
         (loadingClick)="onDelete()">
   <mat-icon>delete</mat-icon>
-  Poista
+  Delete
 </button>
 ```
 
@@ -158,9 +149,9 @@ The directive:
 
 **Template:**
 ```html
-<button matButton="filled" sharedLoadingButton [loadingClick]="onSave">
+<button matButton sharedLoadingButton [loadingClick]="onSave">
   <mat-icon>save</mat-icon>
-  Tallenna
+  Save
 </button>
 ```
 
@@ -174,24 +165,24 @@ onSave = async (): Promise<void> => {
 ### With Form Validation
 
 ```html
-<button matButton="filled"
+<button matButton
         sharedLoadingButton
         [disabled]="!myForm().valid()"
         [loadingClick]="onSubmit">
   <mat-icon>save</mat-icon>
-  Tallenna
+  Save
 </button>
 ```
 
 ### With Confirmation Pattern
 
 ```html
-<button matButton="filled"
+<button matButton
         sharedLoadingButton
         [confirm]="true"
         [loadingClick]="onDelete">
   <mat-icon>delete</mat-icon>
-  Poista
+  Delete
 </button>
 ```
 
@@ -200,7 +191,7 @@ onSave = async (): Promise<void> => {
 Do NOT create `canSubmit` computed signals that combine form validity with loading state:
 
 ```typescript
-// ❌ WRONG - Never do this
+// WRONG - Never do this
 readonly canSubmit = computed(() => this.myForm().valid() && !this.isSubmitting());
 ```
 
@@ -209,13 +200,13 @@ Instead, use:
 - `sharedLoadingButton` directive handles loading state automatically
 
 ```html
-<!-- ✅ CORRECT -->
-<button matButton="filled"
+<!-- CORRECT -->
+<button matButton
         sharedLoadingButton
         [disabled]="!myForm().valid()"
         [loadingClick]="onSubmit">
   <mat-icon>save</mat-icon>
-  Tallenna
+  Save
 </button>
 ```
 
@@ -224,7 +215,7 @@ Instead, use:
 Always use arrow functions for async handlers to preserve `this` binding:
 
 ```typescript
-// ✅ CORRECT - Arrow function preserves 'this'
+// CORRECT - Arrow function preserves 'this'
 onSubmit = async (): Promise<void> => {
   if (this.myForm().valid()) {
     await this.myService.save(this.formModel());
@@ -232,7 +223,7 @@ onSubmit = async (): Promise<void> => {
   }
 };
 
-// ❌ WRONG - Regular method loses 'this' when passed as reference
+// WRONG - Regular method loses 'this' when passed as reference
 async onSubmit(): Promise<void> {
   // 'this' will be undefined when called by directive
 }
@@ -247,13 +238,13 @@ When migrating, replace these legacy patterns:
 | Legacy Syntax | New Syntax |
 |---------------|------------|
 | `mat-button` | `matButton` with icon inside |
-| `mat-raised-button` | `matButton="elevated"` |
-| `mat-flat-button` | `matButton="filled"` |
-| `mat-stroked-button` | `matButton="outlined"` |
-| `mat-icon-button` | `matButton` variant with `<mat-icon>` inside |
+| `mat-raised-button` | `matButton` with CSS class |
+| `mat-flat-button` | `matButton` with CSS class |
+| `mat-stroked-button` | `matButton` with CSS class |
+| `mat-icon-button` | `matButton class="only-icon"` with `<mat-icon>` inside |
 | Text-only button | Add `<mat-icon>` before text |
-| `color="primary"` | Use `matButton="filled"` |
-| `color="warn"` | Use `matButton="filled"` (no color needed) |
+| `color="primary"` | `matButton class="btn-action"` |
+| `color="warn"` | `matButton class="btn-destructive"` |
 | `(click)="asyncMethod()"` | `(loadingClick)="asyncMethod()"` with `sharedLoadingButton` |
 
 ### Migration Examples
@@ -266,16 +257,16 @@ When migrating, replace these legacy patterns:
 
 **After:**
 ```html
-<button matButton="outlined" (click)="onCancel()">
+<button matButton class="btn-cancel" (click)="onCancel()">
   <mat-icon>close</mat-icon>
-  Peruuta
+  Cancel
 </button>
-<button matButton="filled"
+<button matButton class="btn-action"
         sharedLoadingButton
         [disabled]="!myForm().valid()"
-        (loadingClick)="onSubmit()">
+        [loadingClick]="onSubmit">
   <mat-icon>save</mat-icon>
-  Tallenna
+  Save
 </button>
 ```
 
@@ -288,10 +279,10 @@ When migrating, replace these legacy patterns:
 Use `myForm().valid()` directly - do NOT create separate `isFormValid` computed:
 
 ```typescript
-// ❌ WRONG - Don't create separate computed for form validity
+// WRONG - Don't create separate computed for form validity
 readonly isFormValid = computed(() => this.myForm().valid());
 
-// ✅ CORRECT - Use directly in template
+// CORRECT - Use directly in template
 // Template: [disabled]="!myForm().valid()"
 ```
 
@@ -300,7 +291,7 @@ readonly isFormValid = computed(() => this.myForm().valid());
 ```typescript
 // Derive display text from form state
 readonly submitButtonText = computed(() =>
-  this.myForm().valid() ? 'Tallenna' : 'Täytä pakolliset kentät'
+  this.myForm().valid() ? 'Save' : 'Fill required fields'
 );
 
 // Derive warning state

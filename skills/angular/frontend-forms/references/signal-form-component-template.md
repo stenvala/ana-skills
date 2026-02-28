@@ -9,12 +9,9 @@ For components with inline editing like `accounting-posting-list`.
 ```typescript
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { form, FormField, required, pattern } from '@angular/forms/signals';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { SharedLoadingButtonDirective } from '@shared/directives/shared-loading-button.directive';
+import { CoreModule } from '@core/core.module';
+import { MaterialModule } from '@shared/material';
+import { SharedModule } from '@shared/shared.module';
 
 interface PostingFormModel {
   amount: string;
@@ -24,15 +21,7 @@ interface PostingFormModel {
 
 @Component({
   selector: 'feature-posting-list',
-  imports: [
-    FormField,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    SharedLoadingButtonDirective,
-  ],
+  imports: [CoreModule, MaterialModule, SharedModule, FormField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './feature-posting-list.component.html',
 })
@@ -51,8 +40,8 @@ export class FeaturePostingListComponent {
   });
 
   protected readonly postingForm = form(this.formModel, (f) => {
-    required(f.amount, { message: 'Summa on pakollinen' });
-    pattern(f.amount, /^\d+([.,]\d{1,2})?$/, { message: 'Virheellinen summamuoto' });
+    required(f.amount, { message: 'Amount is required' });
+    pattern(f.amount, /^\d+([.,]\d{1,2})?$/, { message: 'Invalid amount format' });
   });
 
   // Reset form for new entry
@@ -106,27 +95,27 @@ export class FeaturePostingListComponent {
   <tr class="edit-row">
     <td>
       <mat-form-field appearance="outline">
-        <input matInput [formField]="postingForm.amount" placeholder="Summa" />
+        <input matInput [formField]="postingForm.amount" placeholder="Amount" />
       </mat-form-field>
     </td>
     <td>
       <mat-form-field appearance="outline">
         <mat-select [formField]="postingForm.side">
-          <mat-option value="debit">Debet</mat-option>
-          <mat-option value="credit">Kredit</mat-option>
+          <mat-option value="debit">Debit</mat-option>
+          <mat-option value="credit">Credit</mat-option>
         </mat-select>
       </mat-form-field>
     </td>
     <td>
       <mat-form-field appearance="outline">
-        <input matInput [formField]="postingForm.comment" placeholder="Kommentti" />
+        <input matInput [formField]="postingForm.comment" placeholder="Comment" />
       </mat-form-field>
     </td>
     <td class="item-actions">
-      <button matButton="outlined" type="button" (click)="cancelEdit()">
+      <button matButton type="button" (click)="cancelEdit()">
         <mat-icon>close</mat-icon>
       </button>
-      <button matButton="filled"
+      <button matButton
               sharedLoadingButton
               [disabled]="!postingForm().valid()"
               (loadingClick)="saveInline()">
@@ -148,14 +137,10 @@ For route components like `route-accounting-document-detail` with autocomplete s
 ```typescript
 import { Component, ChangeDetectionStrategy, inject, signal, computed, effect, untracked } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { CoreModule } from '@core/core.module';
+import { MaterialModule } from '@shared/material';
+import { SharedModule } from '@shared/shared.module';
 import { CoreNavService } from '@core/services';
-import { SharedLoadingButtonDirective } from '@shared/directives/shared-loading-button.directive';
 
 interface DocumentFormModel {
   type: string;
@@ -169,16 +154,7 @@ interface DocumentFormModel {
 
 @Component({
   selector: 'route-feature-document-detail',
-  imports: [
-    FormField,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatAutocompleteModule,
-    MatButtonModule,
-    MatIconModule,
-    SharedLoadingButtonDirective,
-  ],
+  imports: [CoreModule, MaterialModule, SharedModule, FormField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './route-feature-document-detail.component.html',
 })
@@ -266,30 +242,30 @@ export class RouteFeatureDocumentDetailComponent {
 ```html
 <div class="page-container">
   @if (document() === null) {
-    <shared-loading-spinner></shared-loading-spinner>
+    <shared-loading-bar [loading]="true" />
   } @else {
     <h1>{{ document().title }}</h1>
 
     <form class="form-grid">
       <mat-form-field appearance="outline">
-        <mat-label>Tyyppi</mat-label>
+        <mat-label>Type</mat-label>
         <mat-select [formField]="documentForm.type">
-          <mat-option value="INVOICE">Lasku</mat-option>
-          <mat-option value="RECEIPT">Kuitti</mat-option>
-          <mat-option value="OTHER">Muu</mat-option>
+          <mat-option value="INVOICE">Invoice</mat-option>
+          <mat-option value="RECEIPT">Receipt</mat-option>
+          <mat-option value="OTHER">Other</mat-option>
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>Suunta</mat-label>
+        <mat-label>Direction</mat-label>
         <mat-select [formField]="documentForm.direction">
-          <mat-option value="INCOMING">Saapuva</mat-option>
-          <mat-option value="OUTGOING">Lähtevä</mat-option>
+          <mat-option value="INCOMING">Incoming</mat-option>
+          <mat-option value="OUTGOING">Outgoing</mat-option>
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>Toimittaja</mat-label>
+        <mat-label>Vendor</mat-label>
         <input matInput [formField]="documentForm.vendor" [matAutocomplete]="vendorAuto" />
         <mat-autocomplete #vendorAuto="matAutocomplete" (optionSelected)="onVendorSelected($event.option.value)">
           @for (option of filteredVendors(); track option) {
@@ -299,15 +275,15 @@ export class RouteFeatureDocumentDetailComponent {
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>Summa</mat-label>
+        <mat-label>Amount</mat-label>
         <input matInput [formField]="documentForm.amount" />
       </mat-form-field>
     </form>
 
     <div class="card-actions">
-      <button matButton="filled" sharedLoadingButton (loadingClick)="onSave()">
+      <button matButton class="btn-action" sharedLoadingButton (loadingClick)="onSave()">
         <mat-icon>save</mat-icon>
-        Tallenna
+        Save
       </button>
     </div>
   }
@@ -401,7 +377,7 @@ export class RouteDocumentListComponent {
 ```html
 <div class="filter-section">
   <mat-form-field appearance="outline">
-    <mat-label>Tilikausi</mat-label>
+    <mat-label>Fiscal Year</mat-label>
     <mat-select [formField]="filterForm.fiscalYearId">
       @for (fy of fiscalYears(); track fy.id) {
         <mat-option [value]="fy.id">{{ fy.name }}</mat-option>
@@ -410,30 +386,30 @@ export class RouteDocumentListComponent {
   </mat-form-field>
 
   <mat-form-field appearance="outline">
-    <mat-label>Tyyppi</mat-label>
+    <mat-label>Type</mat-label>
     <mat-select [formField]="filterForm.type">
-      <mat-option [value]="null">Kaikki</mat-option>
-      <mat-option value="INVOICE">Lasku</mat-option>
-      <mat-option value="RECEIPT">Kuitti</mat-option>
+      <mat-option [value]="null">All</mat-option>
+      <mat-option value="INVOICE">Invoice</mat-option>
+      <mat-option value="RECEIPT">Receipt</mat-option>
     </mat-select>
   </mat-form-field>
 
   @if (hasActiveFilters()) {
-    <button matButton="outlined" (click)="clearFilters()">
+    <button matButton (click)="clearFilters()">
       <mat-icon>clear</mat-icon>
-      Tyhjennä suodattimet
+      Clear filters
     </button>
   }
 </div>
 
 <div class="document-list">
   @if (documents() === null) {
-    <shared-loading-spinner></shared-loading-spinner>
+    <shared-loading-bar [loading]="true" />
   } @else {
     @for (doc of documents(); track doc.id) {
       <div class="item-row">{{ doc.title }}</div>
     } @empty {
-      <shared-empty-state message="Ei dokumentteja"></shared-empty-state>
+      <shared-empty-state message="No documents found" />
     }
   }
 </div>

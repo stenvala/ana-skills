@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Initialize dummy Angular service and state service files.
+Initialize dummy Angular service and store files.
 
 Usage:
     python .claude/skills/frontend-service/scripts/init_frontend_service.py <feature> <entity-name>
@@ -11,7 +11,7 @@ Example:
 This creates:
     src/ui/src/app/features/accounting/services/
         accounting-document.service.ts
-        accounting-document-state.service.ts
+        accounting-document.store.ts
 """
 
 import os
@@ -33,7 +33,7 @@ def create_service_files(feature: str, entity_name: str):
     # Paths
     base_path = Path("src/ui/src/app/features") / feature / "services"
     service_file = base_path / f"{feature}-{entity_name}.service.ts"
-    state_file = base_path / f"{feature}-{entity_name}-state.service.ts"
+    state_file = base_path / f"{feature}-{entity_name}.store.ts"
 
     # Create directory
     base_path.mkdir(parents=True, exist_ok=True)
@@ -48,7 +48,7 @@ import {{ ListStore, ObjectStore }} from '@core/stores';
 type {entity_pascal}DTO = {{ id: string }};
 
 @Injectable({{ providedIn: 'root' }})
-export class {feature_pascal}{entity_pascal}StateService {{
+export class {feature_pascal}{entity_pascal}Store {{
   /**
    * Normalized entity store: id -> {entity_pascal}DTO
    * Single source of truth for all items
@@ -131,7 +131,7 @@ import {{ firstValueFrom }} from 'rxjs';
 //   {entity_pascal}UpdateDTO,
 //   Private{entity_pascal}ApiService,
 // }} from '@api/index';
-import {{ {feature_pascal}{entity_pascal}StateService }} from './{feature}-{entity_name}-state.service';
+import {{ {feature_pascal}{entity_pascal}Store }} from './{feature}-{entity_name}.store';
 import {{ SharedNotificationService }} from '@shared/index';
 
 export interface {entity_pascal}SearchCriteria {{
@@ -148,7 +148,7 @@ type {entity_pascal}UpdateDTO = {{}};
 export class {feature_pascal}{entity_pascal}Service {{
   // TODO: Inject API service
   // private readonly api = inject(Private{entity_pascal}ApiService);
-  private readonly state = inject({feature_pascal}{entity_pascal}StateService);
+  private readonly state = inject({feature_pascal}{entity_pascal}Store);
   private readonly notification = inject(SharedNotificationService);
 
   /**
@@ -270,7 +270,7 @@ export class {feature_pascal}{entity_pascal}Service {{
     print(f"  {state_file}")
     print(f"  {service_file}")
     print()
-    print(f"State Service: {feature_pascal}{entity_pascal}StateService")
+    print(f"Store: {feature_pascal}{entity_pascal}Store")
     print(f"Service: {feature_pascal}{entity_pascal}Service")
     print()
     print("TODO:")

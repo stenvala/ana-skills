@@ -49,7 +49,8 @@ import {{ CommonModule }} from '@angular/common';
 import {{ MatDialog }} from '@angular/material/dialog';
 import {{ form, FormField }} from '@angular/forms/signals';
 import {{ CoreModule }} from '@core/core.module';
-import {{ MaterialModule, SharedModule }} from '@shared/index';
+import {{ MaterialModule }} from '@shared/material';
+import {{ SharedModule }} from '@shared/shared.module';
 import {{ CoreNavService }} from '@core/services';
 import {{ PATHS }} from '@core/constants';
 // TODO: Import DTOs from @api/index
@@ -112,28 +113,32 @@ export class {component_name} {{
 
     # HTML content
     html_content = f'''<div class="page-container">
-  <header class="page-header">
-    <div class="page-header__icon">
-      <button matButton class="only-icon" (click)="goBack()" matTooltip="Takaisin">
-        <mat-icon>arrow_back</mat-icon>
-      </button>
-    </div>
-    <h1>TODO: Title</h1>
-    <div class="page-header__actions">
-      <!-- TODO: Add action buttons -->
-      <!-- <button matButton="filled" (click)="openCreateDialog()">
-        <mat-icon>add</mat-icon>
-        Lisää uusi
-      </button> -->
-    </div>
-  </header>
+  <mat-card class="mb-md" data-test-id="page-header">
+    <mat-card-header class="mat-card-header--with-margin">
+      <mat-card-title>
+        <div class="flex items-center gap-sm">
+          <button matButton class="only-icon btn-back" (click)="goBack()" data-test-id="back-btn">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <span data-test-id="page-title">TODO: Title</span>
+        </div>
+      </mat-card-title>
+      <div class="page-header__actions">
+        <!-- TODO: Add action buttons -->
+        <!-- <button matButton class="btn-action" (click)="openCreateDialog()" data-test-id="create-btn">
+          <mat-icon>add</mat-icon>
+          Add new
+        </button> -->
+      </div>
+    </mat-card-header>
+  </mat-card>
 
   <!-- TODO: Add filter card if needed -->
-  <!-- <mat-card class="filter-card">
+  <!-- <mat-card class="mb-md" data-test-id="filters">
     <mat-card-content>
-      <div class="filter-form">
-        <mat-form-field appearance="outline">
-          <mat-label>Suodatin</mat-label>
+      <div class="flex gap-md items-start flex-wrap">
+        <mat-form-field appearance="outline" data-test-id="filter-field">
+          <mat-label>Filter</mat-label>
           <mat-select [formField]="filterForm.someField">
             @for (opt of options(); track opt.id) {{
               <mat-option [value]="opt.id">{{{{ opt.name }}}}</mat-option>
@@ -146,43 +151,45 @@ export class {component_name} {{
 
   <!-- TODO: Add loading/empty/content states -->
   <!-- @if (items() === null) {{
-    <div class="loading-state">
-      <mat-spinner diameter="40"></mat-spinner>
-    </div>
+    <shared-loading-bar [loading]="true" data-test-id="loading-spinner" />
   }} @else if (sortedItems().length === 0) {{
     <shared-empty-state
       icon="folder_open"
-      title="Ei tietoja"
-      message="Lisää ensimmäinen kohde aloittaaksesi."
-      actionLabel="Lisää uusi"
-      (actionClick)="openCreateDialog()"
-    >
-    </shared-empty-state>
+      title="No data"
+      message="Add the first item to get started."
+      data-test-id="empty-state"
+    />
   }} @else {{
-    <table mat-table [dataSource]="sortedItems()" class="data-table">
-      <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>Nimi</th>
-        <td mat-cell *matCellDef="let row">{{{{ row.name }}}}</td>
-      </ng-container>
+    <mat-card>
+      <mat-card-content>
+        <div class="table-scroll">
+          <table mat-table [dataSource]="sortedItems()" class="data-table" data-test-id="items-table">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Name</th>
+              <td mat-cell *matCellDef="let row" [attr.data-test-id]="'item-name-' + row.id">{{{{ row.name }}}}</td>
+            </ng-container>
 
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let row" class="actions-cell">
-          <button matButton class="only-icon" [matMenuTriggerFor]="menu" aria-label="Toiminnot">
-            <mat-icon>more_vert</mat-icon>
-          </button>
-          <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="openEditDialog(row)">
-              <mat-icon>edit</mat-icon>
-              <span>Muokkaa</span>
-            </button>
-          </mat-menu>
-        </td>
-      </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let row" class="actions-cell">
+                <button matButton class="only-icon" [matMenuTriggerFor]="menu" [attr.data-test-id]="'menu-btn-' + row.id">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #menu="matMenu">
+                  <button mat-menu-item (click)="openEditDialog(row)" [attr.data-test-id]="'edit-btn-' + row.id">
+                    <mat-icon>edit</mat-icon>
+                    <span>Edit</span>
+                  </button>
+                </mat-menu>
+              </td>
+            </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-    </table>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns" [attr.data-test-id]="'item-row-' + row.id"></tr>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
   }} -->
 </div>
 '''

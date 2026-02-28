@@ -1,375 +1,166 @@
-# State Service Templates
+# Store Templates
 
-## Pattern 1: ListStore with Summary + ObjectStore with Full Items (PREFERRED)
+Stores are **pure data containers** — they expose store instances directly with no wrapper methods.
+The service layer accesses stores directly (e.g., `this.store.buildsStore.get(key)`).
 
-This is the **preferred pattern** for most use cases. It separates:
-- **listItemsStore** (ListStore): Contains summary/subset DTOs for list views (e.g., `FeatureSummaryDTO`)
-- **itemStore** (ObjectStore): Contains full DTOs for detail views (e.g., `FeatureDTO`)
+## Core Principle
 
-This pattern is ideal when:
-- List views only need a subset of fields (name, status, dates)
-- Detail views need the full object with all relationships
-- You want to minimize data transfer for list endpoints
+Stores are pure data containers — just declare store instances, no wrapper methods. Services access stores directly: `this.store.itemsStore.get(key)`, `this.store.itemsStore.set(key, items)`.
+
+**Key rule**: No `getItem()`, `setItem()`, `clearAll()` wrapper methods. Services call store methods directly.
+
+---
+
+## Pattern 1: Paginated List + Detail Store (PREFERRED for paginated data)
+
+Use when the API returns paginated results with total counts and you have separate list/detail views.
 
 ```typescript
-import { Injectable, Signal } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { ListStore, ObjectStore } from '@core/stores';
-import { FeatureDTO, FeatureSummaryDTO } from '@api/index';
+import { FeatureDTO, FeatureDetailDTO } from '@api/dto';
 
 @Injectable({ providedIn: 'root' })
-export class FeatureStateService {
-  /**
-   * LIST STORE: Contains summary objects for list views.
-   * - Keyed by search criteria (e.g., fiscalYearId, or 'all')
-   * - Contains FeatureSummaryDTO which is a subset of FeatureDTO
-   * - Used by list components to display tables/cards
-   * - Does NOT contain full object data
-   */
+export class FeatureStoreService {
+  // Paginated list items keyed by composite search key (e.g., "repoId:status:offset")
+  readonly itemsStore = new ListStore<FeatureDTO>();
+
+  // Total counts keyed by search criteria WITHOUT offset (e.g., "repoId:status")
+  readonly totalStore = new ObjectStore<number>();
+
+  // Individual full items keyed by item ID
+  readonly itemStore = new ObjectStore<FeatureDetailDTO>();
+}
+```
+
+**Cache key strategy**: The service defines helper functions to build composite keys:
+```typescript
+// Used by the service, not the store
+function itemsKey(parentId?: string, status?: string, offset: number = 0): string {
+  return `${parentId || ''}:${status || ''}:${offset}`;
+}
+
+function totalKey(parentId?: string, status?: string): string {
+  return `${parentId || ''}:${status || ''}`;
+}
+```
+
+### When to add more stores
+
+Add additional `ObjectStore` instances for related data loaded separately:
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class FeatureStoreService {
+  readonly itemsStore = new ListStore<FeatureDTO>();
+  readonly totalStore = new ObjectStore<number>();
+  readonly itemStore = new ObjectStore<FeatureDetailDTO>();
+  readonly logContentStore = new ObjectStore<string>();    // Logs loaded separately
+  readonly metricsStore = new ObjectStore<MetricsDTO>();   // Metrics loaded separately
+}
+```
+
+---
+
+## Pattern 2: ListStore + ObjectStore (List/Detail with different DTOs)
+
+Use when list views need summary data and detail views need full objects, but no server-side pagination.
+
+```typescript
+import { Injectable } from '@angular/core';
+import { ListStore, ObjectStore } from '@core/stores';
+import { FeatureSummaryDTO, FeatureDTO } from '@api/dto';
+
+@Injectable({ providedIn: 'root' })
+export class FeatureStoreService {
+  // Summary items for list views, keyed by parent/group key (e.g., 'all', parentId)
   readonly listItemsStore = new ListStore<FeatureSummaryDTO>();
 
-  /**
-   * OBJECT STORE: Contains full objects for detail views.
-   * - Keyed by item ID
-   * - Contains FeatureDTO with all fields and relationships
-   * - Used by detail/edit components
-   * - Single source of truth for individual items
-   */
+  // Full items for detail views, keyed by item ID
   readonly itemStore = new ObjectStore<FeatureDTO>();
-
-  /**
-   * Get list items for a search key.
-   * Returns summary DTOs suitable for list views.
-   */
-  getListItems(searchKey: string): Signal<FeatureSummaryDTO[] | null> {
-    return this.listItemsStore.get(searchKey);
-  }
-
-  /**
-   * Get full item by ID.
-   * Returns complete DTO for detail views.
-   */
-  getItem(id: string): Signal<FeatureDTO | null> {
-    return this.itemStore.get(id);
-  }
-
-  /**
-   * Store list items from search results.
-   */
-  setListItems(searchKey: string, items: FeatureSummaryDTO[]): void {
-    this.listItemsStore.set(searchKey, items);
-  }
-
-  /**
-   * Store a full item.
-   * IMPORTANT: When updating an item, you may need to also update or clear
-   * the listItemsStore depending on your use case:
-   * - Option A: Clear all list caches (simple, always correct)
-   * - Option B: Update the item in all lists where it exists (complex, more efficient)
-   */
-  setItem(id: string, item: FeatureDTO): void {
-    this.itemStore.set(id, item);
-    // Option A: Clear list caches to force refresh
-    // this.listItemsStore.clear();
-
-    // Option B: Update in lists (if summary fields changed)
-    // this.updateItemInLists(id, item);
-  }
-
-  /**
-   * Update item in all list stores where it exists.
-   * Use this when you want to keep list caches valid after an update.
-   */
-  private updateItemInLists(id: string, item: FeatureDTO): void {
-    this.listItemsStore.getAllKeys().forEach(searchKey => {
-      const items = this.listItemsStore.get(searchKey)();
-      if (items) {
-        const index = items.findIndex(i => i.id === id);
-        if (index !== -1) {
-          // Map full DTO to summary DTO
-          const summary: FeatureSummaryDTO = {
-            id: item.id,
-            name: item.name,
-            status: item.status,
-            // ... other summary fields
-          };
-          const updated = [...items];
-          updated[index] = summary;
-          this.listItemsStore.set(searchKey, updated);
-        }
-      }
-    });
-  }
-
-  /**
-   * Remove an item from both stores.
-   */
-  removeItem(id: string): void {
-    this.itemStore.remove(id);
-
-    // Remove from all list caches
-    this.listItemsStore.getAllKeys().forEach(searchKey => {
-      const items = this.listItemsStore.get(searchKey)();
-      if (items) {
-        const filtered = items.filter(i => i.id !== id);
-        if (filtered.length !== items.length) {
-          this.listItemsStore.set(searchKey, filtered);
-        }
-      }
-    });
-  }
-
-  clearAll(): void {
-    this.listItemsStore.clear();
-    this.itemStore.clear();
-  }
-
-  /**
-   * Clear list caches only (items remain for detail views).
-   */
-  clearListCaches(): void {
-    this.listItemsStore.clear();
-  }
 }
 ```
 
 ---
 
-## Pattern 2: ID List + Entity Store (Normalized Pattern)
+## Pattern 3: Simple ListStore
 
-This pattern stores full objects in ObjectStore and only IDs in ListStore.
-Use when list and detail views use the same DTO (no summary variant).
-
-```typescript
-import { Injectable, Signal, computed } from '@angular/core';
-import { ListStore, ObjectStore } from '@core/stores';
-import { FeatureDTO } from '@api/index';
-
-@Injectable({ providedIn: 'root' })
-export class FeatureStateService {
-  /**
-   * ENTITY STORE: Single source of truth for all items.
-   * - Keyed by item ID
-   * - Contains full FeatureDTO
-   * - Both list and detail views read from here
-   */
-  readonly itemEntities = new ObjectStore<FeatureDTO>();
-
-  /**
-   * ID LIST STORE: Contains only IDs for each search criteria.
-   * - Keyed by serialized search criteria
-   * - Contains { id: string }[] - just references, not actual data
-   * - Used to know which items belong to which search result
-   */
-  readonly searchResults = new ListStore<{ id: string }>();
-
-  /**
-   * Get items for a search criteria key.
-   * Returns computed signal that joins IDs to entities.
-   * This pattern ensures all views see the same data.
-   */
-  getItemsBySearchKey(searchKey: string): Signal<FeatureDTO[] | null> {
-    return computed(() => {
-      const ids = this.searchResults.get(searchKey)();
-      if (ids === null) return null;
-      return ids
-        .map(item => this.itemEntities.get(item.id)())
-        .filter((doc): doc is FeatureDTO => !!doc);
-    });
-  }
-
-  /**
-   * Check if a search key exists in results
-   */
-  has(searchKey: string): boolean {
-    return this.searchResults.isInitialized(searchKey);
-  }
-
-  /**
-   * Store items and their search result IDs.
-   * Items go to entity store, IDs go to search results.
-   */
-  setSearchResults(searchKey: string, items: FeatureDTO[]): void {
-    const idList = items.map(item => {
-      this.itemEntities.set(item.id, item);
-      return { id: item.id };
-    });
-    this.searchResults.set(searchKey, idList);
-  }
-
-  /**
-   * Update a single item.
-   * Because list views use computed signals that read from itemEntities,
-   * the update is automatically reflected everywhere.
-   */
-  setItem(id: string, item: FeatureDTO): void {
-    this.itemEntities.set(id, item);
-    // No need to update searchResults - computed signals handle it
-  }
-
-  /**
-   * Remove an item from entity store and all search results.
-   */
-  removeItem(id: string): void {
-    this.itemEntities.remove(id);
-
-    this.searchResults.getAllKeys().forEach(searchKey => {
-      const idList = this.searchResults.get(searchKey)();
-      if (idList) {
-        const filtered = idList.filter(i => i.id !== id);
-        if (filtered.length !== idList.length) {
-          this.searchResults.set(searchKey, filtered);
-        }
-      }
-    });
-  }
-
-  clearAll(): void {
-    this.itemEntities.clear();
-    this.searchResults.clear();
-  }
-
-  clearSearchResults(): void {
-    this.searchResults.clear();
-  }
-}
-```
-
----
-
-## Pattern 3: Simple ListStore (Basic Cases)
-
-For simple resources where you always load all items and don't need separate detail fetching:
+For simple resources loaded all at once with no separate detail view:
 
 ```typescript
 import { Injectable } from '@angular/core';
 import { ListStore } from '@core/stores';
-import { FeatureDTO } from '@api/index';
+import { FeatureDTO } from '@api/dto';
 
 @Injectable({ providedIn: 'root' })
-export class FeatureStateService {
-  /**
-   * Store for lists of items keyed by a grouping key.
-   * get(key) returns Signal<FeatureDTO[] | null>
-   * null means not yet loaded, empty array means loaded but empty
-   */
-  readonly itemsStore = new ListStore<FeatureDTO>();
-
-  /**
-   * Clear all cached data.
-   */
-  clearAll(): void {
-    this.itemsStore.clear();
-  }
-}
-```
-
-## ListStoreWithObject Pattern (Paginated Lists)
-
-```typescript
-import { Injectable } from "@angular/core";
-
-import { ListStoreWithObject } from "@core/base-store/list-store-with-object.store";
-import { FeatureItemDTO, FeatureListMetaDTO } from "@api/dto";
-
-@Injectable({ providedIn: "root" })
 export class FeatureStoreService {
-  /**
-   * Store for paginated lists with metadata.
-   * getList(key) returns Signal<FeatureItemDTO[] | null>
-   * getObject(key) returns Signal<FeatureListMetaDTO | null>
-   */
-  readonly itemsStore = new ListStoreWithObject<
-    FeatureItemDTO,
-    FeatureListMetaDTO
-  >();
-  // You can actually have mutliple store here, that is actually best practice!
-
-  clearAll(): void {
-    this.itemsStore.clear();
-  }
+  // Items keyed by grouping key ('all' for ungrouped, parentId for grouped)
+  readonly itemsStore = new ListStore<FeatureDTO>();
 }
 ```
 
-## ValueStore Pattern (Single Global Value)
+---
+
+## Pattern 4: ListStoreWithObject (Paginated Lists with Metadata)
 
 ```typescript
-import { Injectable } from "@angular/core";
+import { Injectable } from '@angular/core';
+import { ListStoreWithObject } from '@core/base-store/list-store-with-object.store';
+import { FeatureItemDTO, FeatureListMetaDTO } from '@api/dto';
 
-import { ValueStore } from "@core/base-store/value.store";
-import { CurrentUserDTO } from "@api/dto";
-
-@Injectable({ providedIn: "root" })
-export class UserStoreService {
-  /**
-   * Store for current user (no key needed).
-   * get() returns Signal<CurrentUserDTO | null>
-   */
-  readonly currentUser = new ValueStore<CurrentUserDTO>();
-
-  clear(): void {
-    this.currentUser.clear();
-  }
+@Injectable({ providedIn: 'root' })
+export class FeatureStoreService {
+  readonly itemsStore = new ListStoreWithObject<FeatureItemDTO, FeatureListMetaDTO>();
 }
 ```
+
+---
+
+## Pattern 5: ValueStore (Single Global Value)
+
+```typescript
+import { Injectable } from '@angular/core';
+import { ValueStore } from '@core/base-store/value.store';
+import { CurrentUserDTO } from '@api/dto';
+
+@Injectable({ providedIn: 'root' })
+export class UserStoreService {
+  readonly currentUser = new ValueStore<CurrentUserDTO>();
+}
+```
+
+---
 
 ## Store API Reference
 
 ### ListStore<T>
 
 ```typescript
-// Get signal for items at key (null = not loaded)
-get(key: string): Signal<T[] | null>
-
-// Set items at key
-set(key: string, items: T[]): void
-
-// Add single item to list at key
-setItem(key: string, item: T): void
-
-// Remove item by id from list at key
-removeItem(key: string, id: string): void
-
-// Check if key has been loaded
-isInitialized(key: string): boolean
-
-// Remove specific key
-remove(key: string): void
-
-// Clear all data
-clear(): void
+get(key: string): Signal<T[] | null>        // Get signal (null = not loaded)
+set(key: string, items: T[]): void           // Set items at key
+setItem(key: string, item: T): void          // Add single item to list at key
+removeItem(key: string, id: string): void    // Remove item by id from list at key
+isInitialized(key: string): boolean          // Check if key has been loaded
+remove(key: string): void                    // Remove specific key
+clear(): void                                // Clear all data
+getAllKeys(): string[]                        // Get all initialized keys
 ```
 
 ### ObjectStore<T>
 
 ```typescript
-// Get signal for object at key (null = not loaded)
-get(key: string): Signal<T | null>
-
-// Set object at key
-set(key: string, item: T): void
-
-// Check if key has been loaded
-isInitialized(key: string): boolean
-
-// Remove specific key
-remove(key: string): void
-
-// Clear all data
-clear(): void
+get(key: string): Signal<T | null>           // Get signal (null = not loaded)
+set(key: string, item: T): void              // Set object at key
+isInitialized(key: string): boolean          // Check if key has been loaded
+remove(key: string): void                    // Remove specific key
+clear(): void                                // Clear all data
 ```
 
 ### ValueStore<T>
 
 ```typescript
-// Get signal for value (null = not loaded)
-get(): Signal<T | null>
-
-// Set value
-set(value: T): void
-
-// Check if value has been set
-isInitialized(): boolean
-
-// Clear value
-clear(): void
+get(): Signal<T | null>                      // Get signal (null = not loaded)
+set(value: T): void                          // Set value
+isInitialized(): boolean                     // Check if value has been set
+clear(): void                                // Clear value
 ```

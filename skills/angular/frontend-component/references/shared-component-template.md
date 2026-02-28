@@ -93,8 +93,7 @@ const SHARED_COMPONENTS = [
 
 - `shared-empty-state` - Empty content placeholder
 - `shared-loading-state` - Loading indicator with message
-- `shared-loading-spinner` - Simple spinner
-- `shared-loading-overlay` - Full-screen loading overlay
+- `shared-loading-bar` - Loading progress bar
 - `shared-pdf-viewer` - PDF document viewer
 - `shared-search-input` - Search input field
 - `shared-resizable-split-panel` - Resizable split layout

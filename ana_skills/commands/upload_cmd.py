@@ -9,7 +9,7 @@ from typing import Optional
 import typer
 from rich.console import Console
 
-from ana_skills.config import config_exists, get_agent, load_config
+from ana_skills.config import config_exists, get_agent, load_config, save_config
 from ana_skills.models import AGENT_SKILL_PATHS, AgentFramework
 from ana_skills.resources import (
     SKILLS_DIR,
@@ -171,7 +171,8 @@ def upload_command(
             raise typer.Exit(1)
 
         family = find_skill_family(skill_name)
-        if family is None:
+        is_new = family is None
+        if is_new:
             # New skill - ask for family
             console.print(
                 f"[bold yellow]Skill '{skill_name}' is new (not in package).[/bold yellow]"
@@ -179,6 +180,15 @@ def upload_command(
             family = _ask_family(skill_name)
 
         _upload_skill(skill_name, project_dir, framework, family)
+
+        if is_new:
+            skills = cfg.get("skills", {})
+            if skill_name not in skills:
+                skills[skill_name] = True
+                cfg["skills"] = skills
+                save_config(project_dir, cfg)
+                console.print(f"  [green]Added '{skill_name}' to .ana_skills.yml[/green]")
+
         console.print("[bold green]Upload complete.[/bold green]")
         return
 

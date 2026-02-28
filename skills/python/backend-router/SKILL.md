@@ -86,7 +86,10 @@ uv run after_api_change.py
 
 ### Implementation Rules
 
-8. **Dependency injection**: Always inject services via `Depends()` - NEVER instantiate directly
+8. **Inject services, not databases**: Always inject domain services (e.g., `AuthService`, `InvoiceService`) via `Depends()` - NEVER inject `Session` or `get_db_session` directly into routers
+   - Services are injected via dependencies like `get_<domain>_service()`
+   - Services handle their own database session management
+   - Routers should be unaware of database details
 9. **Services return DTOs**: Services handle conversion to DTOs internally, routers just return the result
 10. **All DTO fields use Field()**: For validation, documentation, and OpenAPI schema generation
 11. **No session.commit()**: Middleware handles transactions automatically
@@ -94,7 +97,8 @@ uv run after_api_change.py
 13. **Authentication**: Use `Depends(get_current_user)` for authenticated endpoints
 14. **Use def not async def**: Unless actually doing async operations
 15. **NEVER return raw lists**: Endpoints must ALWAYS return objects, never arrays. Wrap lists in `{ items: [...], total: N }`
-16. **NoUIEndpoints tag**: Use `tags=["NoUIEndpoints"]` for system endpoints that should NOT generate Angular services
+16. **NEVER return dict or list[dict]**: Always return Pydantic objects (see python-coding-conventions skill)
+17. **NoUIEndpoints tag**: Use `tags=["NoUIEndpoints"]` for system endpoints that should NOT generate Angular services
 
 ## When to Use Service vs Repository
 

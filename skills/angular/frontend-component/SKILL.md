@@ -12,14 +12,27 @@ Create Angular standalone components following the controller/view pattern.
 ### 1. Route Components (Controllers)
 - Handle routing, loading states, pagination, and navigation
 - Inject services and manage state
-- Prefix: `route-` (e.g., `route-feature-list`)
+- **Naming**: Prefix `route-` + descriptive name (e.g., `route-feature-list`)
+- **Selector**: `route-<name>` (e.g., `route-feature-list`)
+- **Class**: `Route<Name>Component` (e.g., `RouteFeatureListComponent`)
 - Location: `src/ui/src/app/features/<feature>/components/route-<name>/`
+- **Examples**:
+  - Feature folder: `deployments/` → `route-deployments-detail`, `RouteDeploymentsDetailComponent`
+  - Feature folder: `builds/` → `route-builds`, `RouteBuildsComponent`
+  - Feature folder: `repositories/` → `route-repositories-detail`, `RouteRepositoriesDetailComponent`
 
 ### 2. Presentational Components (Views)
 - Receive data via `input()`, emit events via `output()`
 - No routing logic - purely presentational
-- Prefix: `<feature>-` or descriptive name (e.g., `event-list-viewer`)
+- **Naming**: Use **exact feature folder name** as prefix (plural or singular as folder is named)
+- **Selector**: `app-<feature>-<name>` (e.g., `app-deployments-header`)
+- **Class**: `<Feature><Name>Component` (e.g., `DeploymentsHeaderComponent`)
 - Location: `src/ui/src/app/features/<feature>/components/<name>/`
+- **CRITICAL**: The `<feature>` prefix MUST match the feature folder name exactly
+- **Examples**:
+  - Feature folder: `deployments/` → `deployments-header`, `deployments-logs`, `DeploymentsHeaderComponent`, `DeploymentsLogsComponent`
+  - Feature folder: `builds/` → `builds-list`, `builds-filter`, `BuildsListComponent`, `BuildsFilterComponent`
+  - Feature folder: `repositories/` → `repositories-card`, `RepositoriesCardComponent`
 
 ### 3. Shared Components
 - Reusable across the entire application
@@ -33,6 +46,26 @@ Create Angular standalone components following the controller/view pattern.
 - **Route components**: Creating route pages (list, detail, editor views)
 - **Presentational components**: Building reusable UI pieces, extracting complex view logic
 - **Shared components**: Creating app-wide reusable components (loading states, empty states, viewers)
+
+## ⚠️ CRITICAL: Component Naming Convention
+
+**The `<feature>` prefix in component names MUST match the feature folder name exactly. This is not optional.**
+
+### Common Mistake:
+```typescript
+// ❌ WRONG: Feature folder is "deployments" but using "deployment" prefix
+// Feature folder: src/ui/src/app/features/deployments/
+// Component name: deployment-header (INCORRECT)
+// Class name: DeploymentHeaderComponent (INCORRECT)
+
+// ✅ CORRECT: Feature folder "deployments" uses "deployments" prefix
+// Feature folder: src/ui/src/app/features/deployments/
+// Component name: deployments-header (CORRECT)
+// Class name: DeploymentsHeaderComponent (CORRECT)
+// Selector: app-deployments-header (CORRECT)
+```
+
+This applies even if the folder name is singular or plural. Always use the exact folder name.
 
 ## Prerequisites
 
@@ -89,13 +122,13 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 
 ### All Components
 1. **Module imports**: Always use `[CoreModule, MaterialModule, SharedModule]` - never import Mat\* separately. Exception: Shared components (`src/ui/src/app/shared/`) only import `[CoreModule, MaterialModule]` (no SharedModule to avoid circular dependency)
-2. **Standalone is default**: Don't specify `standalone: true`
+2. **Standalone**: Always use `standalone: true` in the component decorator
 3. **OnPush change detection**: Always use `ChangeDetectionStrategy.OnPush`
 4. **Computed signals**: Use `computed()` for all reactive data
 5. **No subscriptions**: Never subscribe in components
 6. **Effects only for initialization**: Use `effect()` with `untracked()` only for initializing form values from loaded data
 7. **Separate template**: Always put HTML in separate `.html` file
-8. **Global styles**: Use classes from `src/ui/src/styles/` - minimize custom SCSS
+8. **Global styles**: Use classes from `src/ui/src/styles/` - minimize custom SCSS. See `/frontend-design-system` for the complete class reference
 
 ### data-test-id — MANDATORY for E2E Testing
 
@@ -123,8 +156,8 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 ```html
 <!-- Page header -->
 <h1 data-test-id="page-title">Items</h1>
-<button matButton="filled" (click)="openCreateDialog()" data-test-id="create-btn">
-  <mat-icon>add</mat-icon> Lisää uusi
+<button matButton class="btn-action" (click)="openCreateDialog()" data-test-id="create-btn">
+  <mat-icon>add</mat-icon> Add new
 </button>
 
 <!-- Form inputs -->
@@ -142,35 +175,49 @@ nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head
 
 <!-- Row action buttons -->
 <button mat-menu-item (click)="openEditDialog(row)" data-test-id="edit-btn-{{ row.id }}">
-  <mat-icon>edit</mat-icon> <span>Muokkaa</span>
+  <mat-icon>edit</mat-icon> <span>Edit</span>
 </button>
 <button mat-menu-item (click)="onDelete(row)" data-test-id="delete-btn-{{ row.id }}">
-  <mat-icon>delete</mat-icon> <span>Poista</span>
+  <mat-icon>delete</mat-icon> <span>Delete</span>
 </button>
 
 <!-- Empty state and loading -->
 <shared-empty-state ... data-test-id="empty-state"></shared-empty-state>
-<shared-loading-spinner data-test-id="loading-spinner"></shared-loading-spinner>
+<shared-loading-bar data-test-id="loading-spinner"></shared-loading-bar>
 ```
 
 **Do NOT skip this.** If a template has buttons, inputs, headers, or rendered values without `data-test-id`, it is incomplete.
 
 ### Route Components
-9. **Services via inject()**: Use `private service = inject(ServiceClass)`
-10. **Route params via computed**: `formId = computed(() => this.nav.routeParamMap()['paramName'])`
-11. **Active data via nested computed**: `computed(() => { const id = this.formId(); if (!id) return null; return this.service.getData(id)(); })`
-12. **Loading = null**: Derive loading state via `computed(() => this.data() === null)` - NEVER use `isLoading = signal(false)` with manual ngOnInit loading
-13. **No ngOnInit data loading**: Services auto-load via `untracked()` when data signal is null - don't call `loadData()` manually
+9. **Services via inject()**: Use `private readonly service = inject(ServiceClass)`
+10. **Route params via computed**: `itemId = computed(() => this.nav.routeParamMap()['id'])`
+11. **Active data via nested computed**: `computed(() => { const id = this.itemId(); if (!id) return null; return this.service.item(id)(); })`
+12. **Loading = null**: Derive loading state via `computed(() => this.data() === null)` — NEVER use `isLoading = signal(false)` with manual ngOnInit loading
+13. **No ngOnInit data loading**: Services auto-load via `untracked()` when data signal is null — don't call `loadData()` manually
 14. **Navigation**: Use `CoreNavService.goto()` with `PATHS` constants
-15. **Error handling**: Use `MatSnackBar` for error messages
+15. **Error handling**: Use `SharedNotificationService` for user feedback
 16. **Arrow functions**: Use arrow functions for `sharedLoadingButton` directive
 17. **Empty states**: Use `<shared-empty-state>` component (NOT `shared-empty-content`)
-18. **Loading states**: Use `<shared-loading-bar />` for data loading, or `<shared-loading-spinner>` for inline spinners
+18. **Loading states**: Use `<shared-loading-bar />` for data loading, or `<shared-loading-bar>` for inline spinners
 19. **Dialog opening**: Always use static `DialogComponent.open(dialog, data)` method, never `dialog.open(...)`
 
-**CRITICAL - Loading State Pattern:**
+**Paginated List Pattern** (see `RouteBuildsComponent` for reference):
+- Use `signal<string>('')` for each filter, NOT form models
+- Derive composite search params in one `computed()`: `search = computed(() => ({ parentId: this.selectedParentId() || undefined, ... }))`
+- Data computed from search: `items = computed(() => { const s = this.search(); return this.service.items(s.parentId, s.status, s.offset)(); })`
+- Total computed similarly: `total = computed(() => { const s = this.search(); return this.service.total(s.parentId, s.status)(); })`
+- **Reset offset on every filter change**: `this.currentOffset.set(0)` in every filter change handler
+- Import `PAGE_SIZE` from service and expose as class property for template
+
+**Detail View Pattern** (see `RouteBuildsDetailComponent` for reference):
+- Route param: `private readonly itemId = computed(() => this.nav.routeParamMap()['id'])`
+- Item with null guard: `readonly item = computed(() => { const id = this.itemId(); if (!id) return null; return this.service.item(id)(); })`
+- Related data separately: `readonly logContent = computed(() => { const id = this.itemId(); if (!id) return null; return this.service.logContent(id)(); })`
+- Derived state: `readonly hasArtifacts = computed(() => { const item = this.item(); return item !== null && item.status === 'succeeded'; })`
+
+**CRITICAL — Loading State Pattern:**
 ```typescript
-// ❌ WRONG PATTERN - Never do this:
+// ❌ WRONG PATTERN — Never do this:
 export class MyComponent implements OnInit {
   isLoading = signal(false);
   data = signal<Data[] | null>(null);
@@ -183,34 +230,20 @@ export class MyComponent implements OnInit {
   }
 }
 
-// ✅ CORRECT PATTERN - Always do this:
+// ✅ CORRECT PATTERN — Always do this:
 export class MyComponent {
-  // Route param as computed
-  itemId = computed(() => this.nav.routeParamMap()['itemId']);
-
   // Data from service (auto-loads via untracked when null)
-  data = computed(() => {
-    const id = this.itemId();
-    if (!id) return null;
-    return this.service.getById(id)();
+  readonly items = computed(() => {
+    const s = this.search();
+    return this.service.items(s.parentId, s.status, s.offset)();
   });
 
   // Loading derived from data being null
-  isLoading = computed(() => this.data() === null);
+  readonly isLoading = computed(() => this.items() === null);
 }
 ```
 
-The service's `getById()` or `getAll()` methods handle auto-loading:
-```typescript
-// In service
-getById(id: string): Signal<Data | null> {
-  const signal = this.state.getItem(id);
-  if (signal() === null) {
-    untracked(() => this.loadById(id));
-  }
-  return signal;
-}
-```
+**Side Note — Polling**: Some features need real-time updates (e.g., builds). This requires `OnInit`/`OnDestroy` with `setInterval`/`clearInterval`. See `route-component-template.md` for the polling lifecycle pattern. This is NOT standard for all components.
 
 ### Presentational Components
 18. **Inputs**: Use `input<Type>()` function, not `@Input()` decorator
@@ -226,114 +259,22 @@ getById(id: string): Signal<Data | null> {
 26. **Prefix naming**: Always use `shared-` prefix (e.g., `shared-pdf-viewer`, `SharedPdfViewerComponent`)
 27. **Same patterns as presentational**: Use `input()`, `output()`, `computed()`, OnPush change detection
 
-## Global Style Classes
+## Design System
 
-Global styles are in `src/ui/src/styles/`. Always prefer these over custom SCSS.
+For all layout decisions, page structure, CSS class references, button types, card patterns, info-grid usage, table design, status badges, and responsive design, use the `/frontend-design-system` skill. That skill contains the complete design system documentation.
 
-### Layout (`_layout.scss`)
-- `page-centered` - Full page centered container (login, register)
-- `page-with-toolbar` - Full page with toolbar layout
-- `content-wrapper` - Content area with max-width
-- `flex`, `flex-col`, `flex-1`, `items-center`, `justify-center`, `justify-between` - Flexbox utilities
-- `gap-xs`, `gap-sm`, `gap-md`, `gap-lg` - Gap spacing
-- `spacer` - Flex spacer
-- `mb-sm`, `mb-md`, `mb-lg`, `mb-xl` - Margin bottom
-- `full-width` - 100% width
-
-### Pages (`_pages.scss`)
-- `page-container`, `page-container--narrow`, `page-container--wide`, `page-container--fullscreen` - Page wrappers
-- `page-header`, `page-header__actions`, `page-header__info` - Page headers
-- `panel-footer`, `panel-footer__header`, `panel-footer__content` - Footer panels
-- `panel-with-sidebar`, `panel-with-sidebar__sidebar`, `panel-with-sidebar__main` - Sidebar layouts
-- `info-grid`, `info-grid--compact`, `info-item`, `info-label`, `info-value` - Detail views
-- `edit-form`, `edit-form--grid`, `edit-form__actions` - Form layouts
-- `filter-form`, `filter-card` - Filter sections
-- `loading-state` - Centered loading
-- `content-grid`, `content-grid--reverse` - Two-column layouts
-
-### Cards (`_cards.scss`)
-- `form-card`, `form-card--md`, `form-card--lg` - Form cards
-- `feature-card` - Dashboard cards with hover
-- `card-icon` - Card avatar icons
-- `cards-grid` - Responsive card grid
-- `card-compact` - Dense card variant
-
-### Button Types (matButton directive)
-
-**IMPORTANT**: All buttons must use the `matButton` directive with a type. Never use plain `<button>`.
-
-| Type | Use Case | Example |
-|------|----------|---------|
-| `matButton="filled"` | **Primary actions**: Submit, Save, Create, main CTA | Dialog submit, Page header "Lisää uusi" |
-| `matButton="outlined"` | **Secondary actions**: Cancel, Back, alternative actions | Dialog cancel, Cancel editing |
-| `matButton="tonal"` | **Subtle actions in dense UIs**: Quick action buttons, chips | Template quick-apply buttons, current state indicator |
-| `matButton="elevated"` | **Floating/promoted actions**: Add in collapsed sections | "Lisää" button when section is collapsed |
-| `matButton` (no value) + `class="only-icon"` | **Icon-only buttons**: Menu triggers, back buttons | `<button matButton class="only-icon">` |
-
-**Guidelines:**
-- Dialog actions: `outlined` for Cancel, `filled` for Submit/Save
-- Page header actions: `filled` for primary action (Create/Add)
-- Table row actions: Use icon-only buttons with menu trigger
-- Inline forms: `outlined` for Cancel, `filled` for Save
-- Quick-action toolbars: `tonal` for multiple related actions
-
-**Icon requirement**: All buttons MUST have an icon (either icon-only or icon + text).
-
-```html
-<!-- Primary action -->
-<button matButton="filled" (click)="onSubmit()">
-  <mat-icon>save</mat-icon>
-  Tallenna
-</button>
-
-<!-- Secondary action -->
-<button matButton="outlined" (click)="onCancel()">
-  <mat-icon>close</mat-icon>
-  Peruuta
-</button>
-
-<!-- Icon-only button -->
-<button matButton class="only-icon" [matMenuTriggerFor]="menu">
-  <mat-icon>more_vert</mat-icon>
-</button>
-
-<!-- Tonal quick-action -->
-<button matButton="tonal" (click)="applyTemplate(template)">
-  {{ template.name }}
-</button>
-```
-
-### Button CSS Classes (`_buttons.scss`)
-- `btn-submit` - Submit button style
-- `.spinning` (mat-icon) - Spinning animation
-- `.loading` (button) - Loading state
-- `.confirming` (button) - Confirm state (red)
-- `only-icon` - For icon-only buttons (removes text padding)
-
-### Components (`_components.scss`)
-- `data-table`, `clickable-row`, `actions-cell` - Table styles
-- `badge`, `badge--income`, `badge--expense`, `badge--warning`, `badge--pill` - Badges
-- `status-badge`, `status-badge--open`, `status-badge--closed` - Status badges
-- `amount--income`, `amount--expense` - Amount formatting
-- `dialog-card`, `dialog-card--narrow`, `dialog-card--wide` - Dialog sizes
-- `drop-zone`, `drop-zone--active` - File upload
-- `result-box`, `result-box--success`, `result-box--error`, `result-box--warning` - Messages
-- `delete-action` - Red delete button
-
-### Forms (`_forms.scss`)
-- `form` - Form container
-- `dialog-subtitle` - Dialog subtitle text
-
-### Sections (`_sections.scss`)
-- `welcome-section` - Welcome header
-- `panel` - Panel container
+This skill focuses on component architecture, naming conventions, and TypeScript patterns only.
 
 ## Templates
 
-See `references/` folder for:
+The `references/` folder contains complete, self-contained implementation templates. Use these as copy-paste starting points — they ARE the reference implementations.
 
-- `route-component-template.md` - Route component pattern with pagination
-- `presentational-component-template.md` - Feature presentational component pattern
-- `shared-component-template.md` - Shared component pattern (no SharedModule import)
-- `view-template.md` - HTML template patterns
-- `routing-template.md` - Route configuration
+| Template | What It Contains | Use When |
+|----------|-----------------|----------|
+| `route-component-template.md` | Paginated list pattern, detail view pattern, polling lifecycle | Creating route components |
+| `presentational-component-template.md` | Input/output pattern, computed from inputs, content projection | Creating feature presentational components |
+| `shared-component-template.md` | SharedModule registration, no-SharedModule-import rule | Creating shared components |
+| `view-template.md` | Loading/data/empty-state HTML patterns | Building any component template |
+| `routing-template.md` | Path constants, route config, navigation usage | Adding routes for new components |
+
+**How to use**: Pick the template matching your component type, copy the TypeScript and HTML patterns, and replace `Feature`/`Item` placeholders with your actual names.

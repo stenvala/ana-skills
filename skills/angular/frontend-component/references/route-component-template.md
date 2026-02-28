@@ -1,261 +1,426 @@
 # Route Component Template
 
-## Controller Component Pattern
-
-Route components handle routing, loading states, and navigation.
-They inject services and use computed signals for reactive data flow.
+## Pattern 1: Paginated List with Filters
 
 ```typescript
 import {
   Component,
   ChangeDetectionStrategy,
-  signal,
   computed,
   inject,
-  effect,
-  untracked,
+  signal,
 } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { form, FormField } from '@angular/forms/signals';
-import { CommonModule } from '@angular/common';
 import { CoreModule } from '@core/core.module';
-import { MaterialModule, SharedModule } from '@shared/index';
-import { CoreNavService } from '@core/services';
-import { PATHS } from '@core/constants';
-import { ItemDTO, ItemTypeEnum } from '@api/index';
-import { FeatureItemService, FeatureFiscalYearService } from '../../services';
-import { FeatureDialogItemComponent } from '../feature-dialog-item/feature-dialog-item.component';
-
-interface FilterFormModel {
-  fiscalYearId: string | null;
-  type: ItemTypeEnum | null;
-}
+import { MaterialModule } from '@shared/material';
+import { SharedModule } from '@shared/shared.module';
+import { SharedNotificationService } from '@shared/services';
+import { FeatureService, PAGE_SIZE } from '../../services/feature.service';
+import { FeatureListComponent } from '../feature-list/feature-list.component';
 
 @Component({
-  selector: 'route-feature-item-list',
-  imports: [CommonModule, FormField, CoreModule, MaterialModule, SharedModule],
-  templateUrl: './route-feature-item-list.component.html',
+  selector: 'route-feature-list',
+  imports: [
+    CoreModule,
+    MaterialModule,
+    SharedModule,
+    FeatureListComponent,
+  ],
+  templateUrl: './route-feature-list.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RouteFeatureItemListComponent {
-  // Service injection via inject()
-  private readonly itemService = inject(FeatureItemService);
-  private readonly fiscalYearService = inject(FeatureFiscalYearService);
-  private readonly dialog = inject(MatDialog);
-  private readonly nav = inject(CoreNavService);
+export class RouteFeatureListComponent {
+  private readonly service = inject(FeatureService);
+  private readonly notification = inject(SharedNotificationService);
 
-  // Data from services - computed signals trigger auto-loading
-  readonly fiscalYears = this.fiscalYearService.getAll();
+  // Filter state as simple signals
+  readonly selectedParentId = signal<string>('');
+  readonly selectedStatus = signal<string>('');
+  readonly currentOffset = signal<number>(0);
+  readonly pageSize = PAGE_SIZE;
 
-  // Filter form model - single source of truth
-  private readonly filterFormModel = signal<FilterFormModel>({
-    fiscalYearId: null,
-    type: null,
-  });
+  // Composite search derived from filters
+  readonly search = computed(() => ({
+    parentId: this.selectedParentId() || undefined,
+    status: this.selectedStatus() || undefined,
+    offset: this.currentOffset(),
+  }));
 
-  protected readonly filterForm = form(this.filterFormModel);
-
-  // Search criteria derived from form model - no subscription needed
-  readonly searchCriteria = computed(() => {
-    const model = this.filterFormModel();
-    return {
-      fiscalYearId: model.fiscalYearId,
-      type: model.type,
-    };
-  });
-
-  // Items computed from search criteria - cascading reactivity
+  // Data from service — computed signals trigger auto-loading
   readonly items = computed(() => {
-    const criteria = this.searchCriteria();
-    if (!criteria.fiscalYearId) return null;
-    return this.itemService.getSearchResults(criteria)();
+    const s = this.search();
+    return this.service.items(s.parentId, s.status, s.offset)();
   });
 
-  // Sorted items for display
-  readonly sortedItems = computed(() => {
-    const items = this.items();
-    if (!items) return [];
-    return [...items].sort((a, b) => a.name.localeCompare(b.name, 'fi'));
+  readonly total = computed(() => {
+    const s = this.search();
+    return this.service.total(s.parentId, s.status)();
   });
 
-  // UI state
-  readonly showInactive = signal(false);
+  // Loading = data is null
+  readonly isLoading = computed(() => this.items() === null);
 
-  readonly displayedColumns = ['name', 'status', 'actions'];
-
-  readonly typeOptions = [
-    { value: null, label: 'Kaikki' },
-    { value: ItemTypeEnum.TYPE_A, label: 'Tyyppi A' },
-    { value: ItemTypeEnum.TYPE_B, label: 'Tyyppi B' },
+  // Static filter options
+  readonly statusOptions = [
+    { value: '', label: 'All statuses' },
+    { value: 'active', label: 'Active' },
+    { value: 'completed', label: 'Completed' },
   ];
 
-  constructor() {
-    // Auto-select first open fiscal year when data loads
-    effect(() => {
-      const fiscalYears = this.fiscalYears();
-      const currentFiscalYearId = this.filterFormModel().fiscalYearId;
-      if (fiscalYears && fiscalYears.length > 0 && !currentFiscalYearId) {
-        const openYear = fiscalYears.find(fy => fy.status === 'OPEN') || fiscalYears[0];
-        untracked(() => {
-          this.filterFormModel.update(current => ({
-            ...current,
-            fiscalYearId: openYear.id,
-          }));
-        });
-      }
-    });
+  // Filter change handlers — always reset offset to 0
+  protected onParentFilterChange(value: string): void {
+    this.selectedParentId.set(value);
+    this.currentOffset.set(0);
   }
 
-  // Dialog opening via static open method
-  protected async openCreateDialog(): Promise<void> {
-    const result = await FeatureDialogItemComponent.open(this.dialog, {
-      isEdit: false,
-    });
-    if (result) {
-      await this.itemService.create(result);
+  protected onStatusFilterChange(value: string): void {
+    this.selectedStatus.set(value);
+    this.currentOffset.set(0);
+  }
+
+  // Pagination
+  protected onPageChange(direction: 'prev' | 'next'): void {
+    const offset = this.currentOffset();
+    if (direction === 'next') {
+      this.currentOffset.set(offset + this.pageSize);
+    } else if (offset >= this.pageSize) {
+      this.currentOffset.set(offset - this.pageSize);
     }
   }
 
-  protected async openEditDialog(item: ItemDTO): Promise<void> {
-    const result = await FeatureDialogItemComponent.open(this.dialog, {
-      isEdit: true,
-      name: item.name,
-    });
-    if (result) {
-      await this.itemService.update(item.id, result);
+  // Action methods — arrow functions for sharedLoadingButton directive
+  protected onTriggerAction = async (): Promise<void> => {
+    try {
+      await this.service.triggerAction(this.selectedParentId());
+      this.notification.success('Action triggered successfully');
+      const s = this.search();
+      await this.service.search(s.parentId, s.status, s.offset);
+    } catch (error: any) {
+      this.notification.error('Action failed');
+      throw error;
     }
-  }
+  };
+}
+```
 
-  // Toggle handlers
-  protected onToggleInactive(): void {
-    this.showInactive.update(v => !v);
+### Key Patterns for Paginated Lists
+
+1. **Filter signals**: Use `signal<string>('')` for each filter, not a form model
+2. **Composite search computed**: Derive search params from filter signals in one `computed()`
+3. **Data computed from search**: `computed(() => { const s = this.search(); return this.service.items(...)(); })`
+4. **Reset offset on filter change**: Every filter change handler calls `this.currentOffset.set(0)`
+5. **PAGE_SIZE from service**: Import and expose as class property for template access
+6. **Arrow functions for loading buttons**: Use `= async () =>` syntax for `sharedLoadingButton` directive
+
+### Paginated List HTML Template
+
+```html
+<div class="page-container">
+  <mat-card class="mb-md" data-test-id="feature-filters">
+    <mat-card-header class="mat-card-header--with-margin">
+      <mat-card-title>
+        <div class="flex items-center gap-sm">
+          <mat-icon>list</mat-icon>
+          <span data-test-id="page-title">Items</span>
+        </div>
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="flex gap-md items-start flex-wrap">
+        <mat-form-field appearance="outline" data-test-id="filter-parent-field">
+          <mat-label>Parent</mat-label>
+          <mat-select
+            [value]="selectedParentId()"
+            (selectionChange)="onParentFilterChange($event.value)"
+            data-test-id="filter-parent-select"
+          >
+            <mat-option value="">All</mat-option>
+            @for (item of parents() ?? []; track item.id) {
+              <mat-option [value]="item.id">{{ item.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" data-test-id="filter-status-field">
+          <mat-label>Status</mat-label>
+          <mat-select
+            [value]="selectedStatus()"
+            (selectionChange)="onStatusFilterChange($event.value)"
+            data-test-id="filter-status-select"
+          >
+            @for (opt of statusOptions; track opt.value) {
+              <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  @if (isLoading()) {
+    <shared-loading-bar [loading]="true" data-test-id="loading-spinner" />
+  } @else if (items()!.length === 0) {
+    <shared-empty-state
+      icon="folder_open"
+      title="No items found"
+      message="No items match the current filters."
+      data-test-id="empty-state"
+    />
+  } @else {
+    <mat-card>
+      <mat-card-content>
+        <app-feature-list [items]="items()!" />
+      </mat-card-content>
+
+      <mat-card-actions class="pagination-actions">
+        <span data-test-id="pagination-info">
+          Showing {{ currentOffset() + 1 }}&ndash;{{ currentOffset() + items()!.length }} of
+          {{ total() }}
+        </span>
+        <div class="flex gap-sm">
+          <button
+            matButton
+            class="btn-action"
+            [disabled]="currentOffset() === 0"
+            (click)="onPageChange('prev')"
+            data-test-id="pagination-prev-btn"
+          >
+            <mat-icon>chevron_left</mat-icon>
+            Previous
+          </button>
+          <button
+            matButton
+            class="btn-action"
+            [disabled]="currentOffset() + pageSize >= total()"
+            (click)="onPageChange('next')"
+            data-test-id="pagination-next-btn"
+          >
+            Next
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      </mat-card-actions>
+    </mat-card>
   }
+</div>
+```
+
+---
+
+## Pattern 2: Detail View with Related Data
+
+```typescript
+import {
+  Component,
+  ChangeDetectionStrategy,
+  computed,
+  inject,
+} from '@angular/core';
+import { CoreModule } from '@core/core.module';
+import { MaterialModule } from '@shared/material';
+import { SharedModule } from '@shared/shared.module';
+import { CoreNavService } from '@core/services';
+import { PATHS } from '@core/constants';
+import { FeatureService } from '../../services/feature.service';
+
+@Component({
+  selector: 'route-feature-detail',
+  imports: [CoreModule, MaterialModule, SharedModule],
+  templateUrl: './route-feature-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class RouteFeatureDetailComponent {
+  private readonly service = inject(FeatureService);
+  private readonly nav = inject(CoreNavService);
+
+  // Route param as computed
+  private readonly itemId = computed(() => this.nav.routeParamMap()['id']);
+
+  // Item from service — auto-loads via untracked when null
+  readonly item = computed(() => {
+    const id = this.itemId();
+    if (!id) return null;
+    return this.service.item(id)();
+  });
+
+  // Loading = data is null
+  readonly isLoading = computed(() => this.item() === null);
+
+  // Related data from service — auto-loads separately
+  readonly logContent = computed(() => {
+    const id = this.itemId();
+    if (!id) return null;
+    return this.service.logContent(id)();
+  });
+
+  // Derived state from loaded item
+  readonly hasArtifacts = computed(() => {
+    const item = this.item();
+    return item !== null && item.status === 'succeeded';
+  });
 
   // Navigation
-  protected goBack(): void {
-    this.nav.goto(PATHS.COMMON.HOME);
+  protected navigateBack(): void {
+    this.nav.goto(PATHS.FEATURE.LIST);
   }
 
-  protected viewItem(item: ItemDTO): void {
-    this.nav.goto(PATHS.FEATURE.ITEM_DETAIL, { itemId: item.id });
+  // Helper methods for template
+  protected getStatusClass(status: string): string {
+    switch (status) {
+      case 'succeeded': return 'status--succeeded';
+      case 'failed': return 'status--failed';
+      case 'ongoing': return 'status--ongoing';
+      default: return 'status--pending';
+    }
+  }
+
+  protected formatTime(timestamp: number | undefined): string {
+    if (!timestamp) return '--';
+    return new Date(timestamp * 1000).toLocaleString();
   }
 }
 ```
 
+### Key Patterns for Detail Views
+
+1. **Route param as computed**: `computed(() => this.nav.routeParamMap()['id'])`
+2. **Item from service with null guard**: `computed(() => { const id = this.itemId(); if (!id) return null; return this.service.item(id)(); })`
+3. **Loading = null**: `computed(() => this.item() === null)`
+4. **Related data separately computed**: Each piece of related data gets its own computed signal
+5. **Derived state from item**: Additional computed signals for UI state (e.g., `hasArtifacts`)
+6. **Helper methods**: Format/transform methods for the template (status classes, date formatting)
+7. **No ngOnInit loading**: Services auto-load via untracked — never call load methods in ngOnInit
+
+### Detail View HTML Template (info-grid pattern)
+
+```html
+<div class="page-container">
+  @if (isLoading()) {
+    <shared-loading-bar [loading]="true" data-test-id="loading-spinner" />
+  } @else {
+    <mat-card class="mb-md" data-test-id="item-metadata">
+      <mat-card-header class="mat-card-header--with-margin">
+        <mat-card-title>
+          <div class="flex items-center gap-sm">
+            <button matButton class="only-icon btn-back" (click)="navigateBack()" data-test-id="back-btn">
+              <mat-icon>arrow_back</mat-icon>
+            </button>
+            <span data-test-id="page-title">Item Details</span>
+          </div>
+        </mat-card-title>
+        <div class="page-header__actions">
+          <!-- Action buttons here -->
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Name</span>
+            <span class="info-value" data-test-id="item-name">{{ item()!.name }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Status</span>
+            <span class="info-value">
+              <span class="status-badge" [ngClass]="getStatusClass(item()!.status)" data-test-id="item-status">
+                {{ item()!.status }}
+              </span>
+            </span>
+          </div>
+          <!-- More info-items... -->
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>
+```
+
+---
+
+## Side Note: Polling Lifecycle
+
+For features that need real-time updates (builds, deployments), add polling in the component:
+
+```typescript
+export class RouteFeatureListComponent implements OnInit, OnDestroy {
+  private pollingInterval: ReturnType<typeof setInterval> | null = null;
+
+  ngOnInit(): void {
+    this.startPolling();
+  }
+
+  ngOnDestroy(): void {
+    this.stopPolling();
+  }
+
+  private startPolling(): void {
+    this.pollingInterval = setInterval(async () => {
+      const changed = await this.service.checkForUpdates();
+      if (changed) {
+        this.currentOffset.set(0);  // Reset to first page
+      }
+    }, 5000);
+  }
+
+  private stopPolling(): void {
+    if (this.pollingInterval !== null) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
+  }
+}
+```
+
+For detail views, poll only when the item is in a transitional state:
+
+```typescript
+private startPolling(): void {
+  this.pollingInterval = setInterval(async () => {
+    const item = this.item();
+    if (item && item.status === 'ongoing') {
+      await this.loadItem();  // Refresh the item
+    }
+  }, 3000);
+}
+```
+
+This is a **special pattern** — most components do NOT need polling.
+
+---
+
 ## Template data-test-id Requirement
 
-**IMPORTANT**: When creating the HTML template for a route component, ALL interactive elements, rendered values, and key content must have `data-test-id` attributes for E2E testing. This includes all buttons, inputs, selects, toggles, page titles, table rows, cell values, status badges, loading states, and empty states. See SKILL.md for the full naming convention and required element list.
+**IMPORTANT**: ALL interactive elements, rendered values, and key content must have `data-test-id` attributes. See SKILL.md for the full naming convention.
 
-## Key Patterns
+---
+
+## Key Patterns Summary
 
 ### Service Injection
 
 ```typescript
-// Use inject() function with readonly modifier
-private readonly itemService = inject(FeatureItemService);
-private readonly fiscalYearService = inject(FeatureFiscalYearService);
-private readonly dialog = inject(MatDialog);
+private readonly service = inject(FeatureService);
 private readonly nav = inject(CoreNavService);
+private readonly notification = inject(SharedNotificationService);
 ```
 
-### Data from Services via Computed Signals
-
-```typescript
-// Services return signals that auto-load data
-readonly fiscalYears = this.fiscalYearService.getAll();
-
-// For search-based data, derive from form model
-readonly items = computed(() => {
-  const criteria = this.searchCriteria();
-  if (!criteria.fiscalYearId) return null;
-  return this.itemService.getSearchResults(criteria)();
-});
-```
-
-### Filter Form with Signal Forms
-
-```typescript
-interface FilterFormModel {
-  fiscalYearId: string | null;
-  type: string | null;
-}
-
-// Form model as signal - single source of truth
-private readonly filterFormModel = signal<FilterFormModel>({
-  fiscalYearId: null,
-  type: null,
-});
-
-protected readonly filterForm = form(this.filterFormModel);
-
-// Search criteria derived automatically
-readonly searchCriteria = computed(() => {
-  const model = this.filterFormModel();
-  return {
-    fiscalYearId: model.fiscalYearId,
-    type: model.type,
-  };
-});
-```
-
-### Auto-Initialize Form via Effect
-
-```typescript
-constructor() {
-  effect(() => {
-    const fiscalYears = this.fiscalYears();
-    const currentFiscalYearId = this.filterFormModel().fiscalYearId;
-    if (fiscalYears && fiscalYears.length > 0 && !currentFiscalYearId) {
-      const openYear = fiscalYears.find(fy => fy.status === 'OPEN') || fiscalYears[0];
-      untracked(() => {
-        this.filterFormModel.update(current => ({
-          ...current,
-          fiscalYearId: openYear.id,
-        }));
-      });
-    }
-  });
-}
-```
-
-### Dialog Opening via Static Method
-
-```typescript
-// Always use static open method - never firstValueFrom(dialog.open(...).afterClosed())
-protected async openCreateDialog(): Promise<void> {
-  const result = await FeatureDialogItemComponent.open(this.dialog, {
-    isEdit: false,
-  });
-  if (result) {
-    await this.itemService.create(result);
-  }
-}
-```
-
-### Loading State - CRITICAL PATTERN
+### Loading State — CRITICAL PATTERN
 
 ```typescript
 // ✅ CORRECT: Loading state derived from data being null
 readonly isLoading = computed(() => this.items() === null);
 
-// ❌ NEVER DO THIS - Manual loading with ngOnInit
+// ❌ NEVER DO THIS — Manual loading with ngOnInit
 // isLoading = signal(false);
-// async ngOnInit() {
-//   this.isLoading.set(true);
-//   await this.service.loadData();
-//   this.isLoading.set(false);
-// }
+// async ngOnInit() { ... }
 ```
 
-Services handle auto-loading internally:
+### Dialog Opening via Static Method
+
 ```typescript
-// In service - auto-load when signal accessed
-getAll(): Signal<Data[] | null> {
-  const signal = this.state.get();
-  if (signal() === null) {
-    untracked(() => this.loadAll());
+protected async openDialog(): Promise<void> {
+  const result = await FeatureDialogComponent.open(this.dialog, { data });
+  if (result) {
+    await this.service.create(result);
   }
-  return signal;
 }
 ```
 
@@ -265,68 +430,6 @@ getAll(): Signal<Data[] | null> {
 readonly sortedItems = computed(() => {
   const items = this.items();
   if (!items) return [];
-  const filtered = this.showInactive() ? items : items.filter(i => i.isActive);
-  return [...filtered].sort((a, b) => a.name.localeCompare(b.name, 'fi'));
+  return [...items].sort((a, b) => a.name.localeCompare(b.name, 'fi'));
 });
-```
-
-## Detail Component Pattern
-
-For detail/edit views that load a single item by route param:
-
-```typescript
-export class RouteFeatureItemDetailComponent {
-  private readonly itemService = inject(FeatureItemService);
-  private readonly nav = inject(CoreNavService);
-
-  // Route param as computed - NEVER use signal + ngOnInit
-  readonly itemId = computed(() => this.nav.routeParamMap()['itemId']);
-
-  // Check for "new" mode
-  readonly isNew = computed(() => this.nav.routeParamMap()['itemId'] === 'new');
-
-  // Item from service - auto-loads when accessed
-  readonly item = computed(() => {
-    const id = this.itemId();
-    if (!id || this.isNew()) return null;
-    return this.itemService.getById(id)();
-  });
-
-  // Loading derived from item being null (when not in new mode)
-  readonly isLoading = computed(() => {
-    if (this.isNew()) return false;
-    return this.item() === null;
-  });
-
-  // Form model as signal
-  private readonly formModel = signal<FormModel>({ name: '', ... });
-  protected readonly editForm = form(this.formModel);
-
-  constructor() {
-    // Populate form when item loads OR set defaults for new
-    effect(() => {
-      const isNew = this.isNew();
-      const item = this.item();
-
-      untracked(() => {
-        if (isNew) {
-          this.setDefaults();
-        } else if (item) {
-          this.populateForm(item);
-        }
-      });
-    });
-  }
-
-  private setDefaults(): void {
-    this.formModel.set({ name: 'Default', ... });
-  }
-
-  private populateForm(item: ItemDTO): void {
-    this.formModel.set({
-      name: item.name,
-      ...
-    });
-  }
-}
 ```
