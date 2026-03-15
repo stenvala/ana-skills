@@ -43,7 +43,7 @@ After creating/updating a domain, update `docs/datamodels/all_tables.md`:
 ## Template
 
 **IMPORTANT**: Use the MANDATORY documentation template from database-model skill:
-`.claude/skills/database-model/references/datamodel-docs-template.md`
+`.claude/skills/database-model/resources/datamodel-docs-template.md`
 
 This template defines the exact structure that ALL data model documentation MUST follow:
 - Domain-specific colors for ERD diagrams (each domain MUST have unique color)
@@ -54,7 +54,7 @@ This template defines the exact structure that ALL data model documentation MUST
 - Security considerations
 - JSONB schema documentation
 
-Also see `references/domain-template.md` for additional guidance.
+Also see `resources/domain-template.md` for additional guidance.
 
 ## Verification
 

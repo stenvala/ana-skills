@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for f in skills/database/database-schema-edit-postgres/SKILL.md skills/database/database-setup-postgres/SKILL.md skills/infra/create-web-app/SKILL.md skills/database/database-design/SKILL.md)",
+      "Bash(do sed -i '' 's|references/|resources/|g' \"$f\")",
+      "Bash(done)"
+    ]
+  }
+}

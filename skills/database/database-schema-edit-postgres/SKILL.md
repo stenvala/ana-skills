@@ -54,7 +54,7 @@ uv run python setup_db.py demo_data main
 
 ## Templates
 
-See `references/schema-examples.md` for examples of:
+See `resources/schema-examples.md` for examples of:
 - Creating new tables
 - Adding columns to existing tables
 - Creating indexes

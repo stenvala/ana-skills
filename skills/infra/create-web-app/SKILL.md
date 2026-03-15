@@ -168,7 +168,7 @@ Create `.nvmrc` in the project root with content `20.19` to specify the Node.js 
 
 ### 3. Create Angular Frontend
 
-Follow `references/angular-setup.md` to:
+Follow `resources/angular-setup.md` to:
 
 - Initialize Angular 21 project with Angular Material
 - Set up folder structure (core, shared, features)
@@ -182,7 +182,7 @@ After Angular project is initialized, copy the foundation template files:
 
 #### 4a. Core Foundation
 
-Follow `references/angular-core-foundation.md` - copy all files from `references/templates/core/` to `src/ui/src/app/core/`. This provides:
+Follow `resources/angular-core-foundation.md` - copy all files from `resources/templates/core/` to `src/ui/src/app/core/`. This provides:
 - Signal-based state management stores (ValueStore, ObjectStore, ListStore, ListStoreWithObject)
 - Navigation service (CoreNavService)
 - Empty navbar placeholder
@@ -191,7 +191,7 @@ Follow `references/angular-core-foundation.md` - copy all files from `references
 
 #### 4b. Shared Foundation
 
-Follow `references/angular-shared-foundation.md` - copy all files from `references/templates/shared/` to `src/ui/src/app/shared/`. This provides:
+Follow `resources/angular-shared-foundation.md` - copy all files from `resources/templates/shared/` to `src/ui/src/app/shared/`. This provides:
 - Material module with all common imports
 - 9 reusable components (loading overlay/spinner/state/bar, confirm dialog, empty state, banner, search input, badge)
 - Loading button directive with confirmation pattern
@@ -200,7 +200,7 @@ Follow `references/angular-shared-foundation.md` - copy all files from `referenc
 
 #### 4c. Styles Foundation
 
-Follow `references/angular-styles-foundation.md`:
+Follow `resources/angular-styles-foundation.md`:
 - Copy `.editorconfig` to `src/ui/`
 - Copy `styles.scss` to `src/ui/src/` (replaces default)
 - Copy all `_*.scss` partials to `src/ui/src/styles/`
@@ -208,14 +208,14 @@ Follow `references/angular-styles-foundation.md`:
 
 #### 4d. App Foundation
 
-Follow `references/angular-app-foundation.md` - copy files from `references/templates/app/` to `src/ui/src/app/`, replacing Angular CLI defaults:
+Follow `resources/angular-app-foundation.md` - copy files from `resources/templates/app/` to `src/ui/src/app/`, replacing Angular CLI defaults:
 - `app.component.ts/html/scss` - Root component with navbar visibility
 - `app.config.ts` - Application config with interceptor, router, animations, markdown
 - `app.routes.ts` - Empty routes placeholder
 
 ### 5. Create FastAPI Backend
 
-Follow `references/fastapi-setup.md` to:
+Follow `resources/fastapi-setup.md` to:
 
 - Create minimal FastAPI application
 - Add hello world endpoint
@@ -223,7 +223,7 @@ Follow `references/fastapi-setup.md` to:
 
 ### 6. Create Worker (if needed)
 
-Follow `references/worker-setup.md` to:
+Follow `resources/worker-setup.md` to:
 
 - Create worker entry point with polling loop
 - Set up signal handling for graceful shutdown
@@ -232,7 +232,7 @@ Follow `references/worker-setup.md` to:
 
 ### 7. Create Development Scripts
 
-Follow `references/scripts-setup.md` to:
+Follow `resources/scripts-setup.md` to:
 
 - Create start_services.py orchestrator (includes worker if applicable)
 - Create run_tests.py test runner
@@ -241,7 +241,7 @@ Follow `references/scripts-setup.md` to:
 
 ### 8. Create API Code Generator
 
-Follow `references/after-api-change-setup.md` to:
+Follow `resources/after-api-change-setup.md` to:
 
 - Create after_api_change.py script
 - Configure API port for OpenAPI URL
@@ -249,7 +249,7 @@ Follow `references/after-api-change-setup.md` to:
 
 ### 9. Create pyproject.toml
 
-Follow `references/pyproject-setup.md` to:
+Follow `resources/pyproject-setup.md` to:
 
 - Create uv-managed pyproject.toml
 - Add FastAPI, uvicorn, and dev dependencies
@@ -329,14 +329,14 @@ This pattern uses SQLite as the queue. No external message broker needed.
 
 See reference files for detailed templates:
 
-- `references/angular-setup.md` - Angular CLI scaffolding and basic configuration
-- `references/angular-core-foundation.md` - Core module foundation (stores, nav service, navbar, paths)
-- `references/angular-shared-foundation.md` - Shared module foundation (components, pipes, directives, services)
-- `references/angular-styles-foundation.md` - Design system (styles.scss + 19 partials)
-- `references/angular-app-foundation.md` - App root files (component, config, routes)
-- `references/templates/` - Actual source files to copy into the project
-- `references/fastapi-setup.md` - FastAPI setup
-- `references/worker-setup.md` - Worker polling loop setup
-- `references/scripts-setup.md` - Python development scripts
-- `references/pyproject-setup.md` - Python project configuration
-- `references/after-api-change-setup.md` - OpenAPI to TypeScript generator
+- `resources/angular-setup.md` - Angular CLI scaffolding and basic configuration
+- `resources/angular-core-foundation.md` - Core module foundation (stores, nav service, navbar, paths)
+- `resources/angular-shared-foundation.md` - Shared module foundation (components, pipes, directives, services)
+- `resources/angular-styles-foundation.md` - Design system (styles.scss + 19 partials)
+- `resources/angular-app-foundation.md` - App root files (component, config, routes)
+- `resources/templates/` - Actual source files to copy into the project
+- `resources/fastapi-setup.md` - FastAPI setup
+- `resources/worker-setup.md` - Worker polling loop setup
+- `resources/scripts-setup.md` - Python development scripts
+- `resources/pyproject-setup.md` - Python project configuration
+- `resources/after-api-change-setup.md` - OpenAPI to TypeScript generator

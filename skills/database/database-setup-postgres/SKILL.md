@@ -31,7 +31,7 @@ Ask the user for the project/schema name (e.g., "my-app" becomes "my-app-main" s
 
 ### 2. Create setup_db.py
 
-Create the setup script from `references/postgres-setup.md` template in the project root.
+Create the setup script from `resources/postgres-setup.md` template in the project root.
 
 Update the `PROJECT_NAME` constant to match the user's project name.
 
@@ -109,4 +109,4 @@ After setup:
 
 ## Templates
 
-See `references/postgres-setup.md` for complete setup_db.py template.
+See `resources/postgres-setup.md` for complete setup_db.py template.
