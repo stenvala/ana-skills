@@ -33,30 +33,24 @@ API (write)                    Worker (read + process)
 ### How It Works
 
 1. **API creates tasks**: Inserts records with `status = "pending"` into the database
-2. **Worker polls**: Every N seconds, queries for the oldest pending task
+2. **Worker polls**: Every N seconds, queries for the oldest pending task (FIFO by `created_at`)
 3. **Worker processes**: Marks task as `"ongoing"`, does the work, marks as `"succeeded"` or `"failed"`
 4. **Crash recovery**: On startup, any `"ongoing"` tasks are marked as `"failed"` (worker must have crashed)
-
-### Queuing Guarantees
-
-- **One build at a time**: Worker picks only one pending build per poll cycle and processes it to completion before checking for the next
-- **One deployment per environment**: Before starting a deployment, check if another deployment is ongoing for the same environment. Skip if so
-- **FIFO ordering**: Pending tasks ordered by `created_at` timestamp
-- **Crash recovery**: On startup, mark all `ongoing` tasks as `failed`
+5. **One at a time**: Worker picks only one pending task per poll cycle. For per-environment exclusivity (e.g., deployments), check for ongoing tasks before starting
 
 ## Prerequisites
 
 1. Database schema must have task tables with a `status` column (use `/database-setup-sqlite` or `/database-setup-postgres`)
 2. Task model must exist with status enum (use `/database-model`)
-3. `src/shared/common.py` must have `DEFAULT_WORKER_POLL_INTERVAL` and `get_audit_logs_dir()`
+3. Shared common module must have `DEFAULT_WORKER_POLL_INTERVAL` and `get_audit_logs_dir()`
 
 ## File Locations
 
-- **Worker entry point**: `src/worker/main.py`
-- **Task processors**: `src/worker/<task_type>_processor.py`
-- **Task models**: `src/shared/db/models/<domain>_models/<task>.py`
-- **Task enums**: `src/shared/db/models/<domain>_models/<domain>_enums.py`
-- **Services** (shared): `src/shared/services/<domain>/<feature>_service.py`
+- **Worker entry point**: `main.py` in the worker module
+- **Task processors**: `<task_type>_processor.py` in the worker module
+- **Task models**: Task model files in the shared DB models module, organized by domain
+- **Task enums**: Enum files in the shared DB models module, organized by domain
+- **Services** (shared): `<feature>_service.py` in the shared services module, organized by domain
 
 ## Instructions
 
@@ -74,7 +68,7 @@ class TaskStatus(str, Enum):
 
 ### 2. Create Worker Entry Point
 
-Create `src/worker/main.py` from `references/worker-template.md`. This contains:
+Create the worker entry point from `resources/worker-template.md`. This contains:
 
 - Signal handlers for graceful shutdown (SIGTERM, SIGINT)
 - Database engine initialization
@@ -84,7 +78,7 @@ Create `src/worker/main.py` from `references/worker-template.md`. This contains:
 
 ### 3. Create Task Processors
 
-Create one processor file per task type at `src/worker/<task_type>_processor.py`. Each processor:
+Create one processor file per task type in the worker module. Each processor:
 
 - Receives a database session and task model instance
 - Marks task as `ongoing` at start
@@ -106,7 +100,7 @@ def _can_deploy(session, deployment) -> bool:
     return ongoing is None
 ```
 
-### 5. Register Worker in start_services.py
+### 5. Register Worker in Service Orchestrator
 
 Add the worker to the service orchestrator:
 
@@ -116,7 +110,7 @@ Add the worker to the service orchestrator:
 
 ### 6. Create Systemd Service (for production)
 
-Create a systemd unit file for the worker process. See `references/worker-template.md` for the template.
+Create a systemd unit file for the worker process. See `resources/worker-template.md` for the template.
 
 ## Key Rules
 
@@ -130,28 +124,9 @@ Create a systemd unit file for the worker process. See `references/worker-templa
 8. **Environment exclusivity**: For deployments, check that no other deployment is `ongoing` for the same target environment before starting
 9. **Idempotent processors**: Design processors so they can be safely retried after failure
 
-## Polling Loop Pattern
+## Polling Loop
 
-```
-while running:
-    try:
-        did_work = poll_once()
-        if not did_work:
-            sleep(POLL_INTERVAL)
-    except Exception:
-        log error
-        sleep(POLL_INTERVAL)
-```
-
-When work is found, process immediately without sleeping. This ensures back-to-back tasks execute without unnecessary delay.
-
-## Task Priority Order
-
-Within a single poll cycle, check task types in priority order:
-
-1. Builds first (deployments depend on builds)
-2. Deployments second
-3. Other background tasks last
+Poll in a loop: if work found, process immediately (no sleep); if no work or error, sleep for the poll interval. Within each cycle, check task types in priority order (e.g., builds before deployments).
 
 ## Error Handling
 
@@ -164,5 +139,5 @@ Within a single poll cycle, check task types in priority order:
 
 ## Templates
 
-See `references/` folder for:
+See `resources/` folder for:
 - `worker-template.md` - Complete worker entry point, processor pattern, systemd service, and concurrency checks

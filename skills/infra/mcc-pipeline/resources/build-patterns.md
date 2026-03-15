@@ -47,9 +47,9 @@ OUTPUT_DIR = PROJECT_DIR / "output"
 # Node.js path handling (macOS dev vs Linux CI)
 NODE_ENV = os.environ.copy()
 if sys.platform != "darwin":
-    NODE_ENV["PATH"] = "/home/stenvala/.nvm/versions/node/v20.19.2/bin:" + NODE_ENV["PATH"]
-NPM = "npm" if sys.platform == "darwin" else "/home/stenvala/.nvm/versions/node/v20.19.2/bin/npm"
-NPX = "npx" if sys.platform == "darwin" else "/home/stenvala/.nvm/versions/node/v20.19.2/bin/npx"
+    NODE_ENV["PATH"] = "/home/deploy_user/.nvm/versions/node/v20.19.2/bin:" + NODE_ENV["PATH"]
+NPM = "npm" if sys.platform == "darwin" else "/home/deploy_user/.nvm/versions/node/v20.19.2/bin/npm"
+NPX = "npx" if sys.platform == "darwin" else "/home/deploy_user/.nvm/versions/node/v20.19.2/bin/npx"
 
 
 def main():

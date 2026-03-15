@@ -17,15 +17,13 @@ Create service classes that implement business logic for write operations.
 ## Prerequisites
 
 1. Repository layer must exist (use `/database-repository` first)
-2. Base infrastructure exists (use `references/base-infrastructure.md` for fresh projects)
+2. Base infrastructure exists (use `resources/base-infrastructure.md` for fresh projects)
 
 ## File Location
 
-Create services at: `src/shared/services/<domain>/<feature>_service.py`
+Create services as `<feature>_service.py` in the shared services module, organized by domain.
 
-Example: `src/shared/services/accounting/posting_service.py`
-
-**Note**: Services live in `src/shared/` (not `src/api/`) because both the API and worker process need access to business logic. The `src/api/` directory contains only routers, middleware, and dependency injection.
+**Note**: Services live in the shared module (not the API module) because both the API and worker process need access to business logic. The API directory contains only routers, middleware, and dependency injection.
 
 ## Instructions
 
@@ -56,6 +54,6 @@ cd src && uv run python -c "from shared.services.<domain>.<feature>_service impo
 
 ## Templates
 
-See `references/` folder for:
+See `resources/` folder for:
 - `base-infrastructure.md` - **Start here for fresh projects**: MinimalUser, logger, audit models
 - `service-template.md` - Complete service implementation pattern

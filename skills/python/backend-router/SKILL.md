@@ -22,24 +22,24 @@ Create FastAPI routers for API endpoints with proper DTOs and dependency injecti
 
 ## File Locations
 
-- **Base infrastructure**: `src/shared/base_dto.py`
-- **Router**: `src/api/routers/private_<feature>_router.py` or `public_<feature>_router.py`
-- **DTOs**: `src/shared/dtos/<domain>/<feature>_dtos.py` (e.g., `src/shared/dtos/accounting/posting_dtos.py`)
-- **Services**: `src/shared/services/<domain>/<feature>_service.py`
-- **Dependencies**: `src/api/dependencies/<domain>.py` (e.g., `src/api/dependencies/accounting.py`)
+- **Base infrastructure**: BaseDTO class in the shared module
+- **Router**: `private_<feature>_router.py` or `public_<feature>_router.py` in the routers directory
+- **DTOs**: `<feature>_dtos.py` in the shared DTOs module, organized by domain
+- **Services**: `<feature>_service.py` in the shared services module, organized by domain
+- **Dependencies**: Domain-level dependency files in the API dependencies module
 
-**Note**: Services and DTOs live in `src/shared/` (not `src/api/`) because both the API and worker process need access to business logic. The `src/api/` directory contains only routers, middleware, and dependency injection.
+**Note**: Services and DTOs live in the shared module (not the API module) because both the API and worker process need access to business logic. The API directory contains only routers, middleware, and dependency injection.
 
 ## Instructions
 
 ### 1. Create Base Infrastructure (first time only)
 
-If this is a fresh project, first create the base infrastructure following `references/base-infrastructure.md`:
-- `src/shared/base_dto.py` - BaseDTO class with camelCase conversion
-- `src/shared/common_dto.py` - StatusDTO and common DTOs
-- `src/shared/db/models/base_model.py` - BaseDBModelMixin with dump_to_dto_dict
-- `src/shared/enums/status_enum.py` - Common StatusEnum
-- `src/shared/models/minimal_user.py` - MinimalUser for audit trails
+If this is a fresh project, first create the base infrastructure following `resources/base-infrastructure.md`:
+- BaseDTO class with camelCase conversion
+- StatusDTO and common DTOs
+- BaseDBModelMixin with dump_to_dto_dict
+- Common StatusEnum
+- MinimalUser for audit trails
 
 ### 2. Create DTOs
 
@@ -47,7 +47,7 @@ Define request and response DTOs inheriting from `BaseDTO`. **All fields must us
 
 ### 3. Add Dependencies
 
-Add service/repository dependencies in `src/api/dependencies/`.
+Add service/repository dependencies in the API dependencies module.
 
 ### 4. Create Router
 
@@ -55,7 +55,7 @@ Implement API endpoints following REST conventions.
 
 ### 5. Register Router
 
-Add to `src/api/main.py`.
+Add the router to the API application entry point.
 
 ### 6. Generate Frontend Types (if applicable)
 
@@ -125,7 +125,7 @@ Errors are handled centrally by `ApiMiddleware`. Do NOT catch exceptions in rout
 
 ## Templates
 
-See `references/` folder for:
+See `resources/` folder for:
 - `base-infrastructure.md` - **Start here for fresh projects**: BaseDTO, common DTOs, base model mixin
 - `dto-template.md` - DTO patterns with Field() validation
 - `router-template.md` - Complete router implementation

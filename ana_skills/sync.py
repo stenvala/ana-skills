@@ -32,15 +32,14 @@ def _wrap_frontmatter(
     return f"---\nname: {name}\ndescription: {description}\n---\n\n{body}\n"
 
 
-def _copy_subdir(src_dir: Path, dest_dir: Path, subdir_name: str) -> None:
-    """Copy a subdirectory (references/, scripts/) if it exists."""
-    src = src_dir / subdir_name
-    if not src.exists() or not any(src.iterdir()):
-        return
-    dest = dest_dir / subdir_name
-    if dest.exists():
-        shutil.rmtree(dest)
-    shutil.copytree(src, dest)
+def _copy_subdirs(src_dir: Path, dest_dir: Path) -> None:
+    """Copy all subdirectories from src_dir to dest_dir."""
+    for child in src_dir.iterdir():
+        if child.is_dir():
+            dest = dest_dir / child.name
+            if dest.exists():
+                shutil.rmtree(dest)
+            shutil.copytree(child, dest)
 
 
 def sync_skill(
@@ -73,8 +72,7 @@ def sync_skill(
             _wrap_frontmatter(framework, name, description, body),
             encoding="utf-8",
         )
-        _copy_subdir(skill_dir, dest, "references")
-        _copy_subdir(skill_dir, dest, "scripts")
+        _copy_subdirs(skill_dir, dest)
 
     elif framework == AgentFramework.COPILOT:
         dest = skill_base / name
@@ -83,8 +81,7 @@ def sync_skill(
             _wrap_frontmatter(framework, name, description, body),
             encoding="utf-8",
         )
-        _copy_subdir(skill_dir, dest, "references")
-        _copy_subdir(skill_dir, dest, "scripts")
+        _copy_subdirs(skill_dir, dest)
 
     elif framework == AgentFramework.CURSOR:
         skill_base.mkdir(parents=True, exist_ok=True)

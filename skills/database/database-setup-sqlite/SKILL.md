@@ -10,8 +10,7 @@ Create an SQLite database with setup script, schema initialization, and migratio
 ## When to Use
 
 - Setting up a new SQLite database for local development
-- Need file-based database
-- Projects requiring migration support
+- Need file-based database with migration support
 - Simple applications without PostgreSQL dependency
 
 ## Tenancy Modes
@@ -20,16 +19,14 @@ This skill supports two modes:
 
 ### Single-Tenant (default)
 
-- Database at `mcc/data/data.db`
+- One database file in a data directory
 - Simpler code: no domain parameter needed
-- Use `get_data_dir()` for path resolution
 
 ### Multitenant
 
-- Database per domain at `mcc/domains/<domain>/data.db`
+- Database per domain in separate directories
 - Use `--domain` flag on setup_db.py commands
-- Use `get_directory_for_domain(domain)` for path resolution
-- Use `DBContext(domain)` for domain-specific sessions
+- Use domain-specific session context
 
 Choose based on project requirements. If in doubt, use single-tenant.
 
@@ -37,12 +34,10 @@ Choose based on project requirements. If in doubt, use single-tenant.
 
 ### 1. Create Directory Structure
 
-Create the database scripts directory:
-
 ```
 src/
 └── shared/
-    ├── common.py                 # Shared utilities
+    ├── common.py                 # Shared utilities (path resolution)
     └── db/
         ├── __init__.py
         ├── db_context.py         # Database session manager
@@ -55,14 +50,13 @@ src/
 
 ### 2. Create setup_db.py
 
-Create the setup script from `references/sqlite-setup.md` template in the project root. Choose the single-tenant or multitenant template based on project needs.
+Create the setup script from `resources/sqlite-setup.md` template in the project root. Choose the single-tenant or multitenant template based on project needs.
 
 ### 3. Create Schema File
 
-Create `src/shared/db/scripts/create_schema.sql`. Always include the migrations table:
+Always include the migrations tracking table:
 
 ```sql
--- Migrations tracking table (required)
 CREATE TABLE IF NOT EXISTS migrations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
@@ -72,21 +66,14 @@ CREATE TABLE IF NOT EXISTS migrations (
 -- Add your tables below
 ```
 
-### 4. Create Common Utilities
+### 4. Create Common Utilities and DBContext
 
-Create `src/shared/common.py` with path resolution:
-- **Single-tenant**: `get_data_dir()` returns `mcc/data`
-- **Multitenant**: `get_directory_for_domain(domain)` returns `mcc/domains/<domain>`
+See `resources/sqlite-setup.md` for complete templates including:
+- Path resolution utilities (single-tenant and multitenant)
+- DBContext session manager with WAL mode
+- setup_db.py command implementations
 
-### 5. Create DBContext
-
-Create `src/shared/db/db_context.py` for SQLModel/SQLAlchemy session management with WAL mode.
-- **Single-tenant**: Static methods, single engine
-- **Multitenant**: Instance-based, per-domain engines
-
-### 6. Add Dependencies
-
-Add to `pyproject.toml`:
+### 5. Add Dependencies
 
 ```toml
 [project]
@@ -96,103 +83,24 @@ dependencies = [
 ]
 ```
 
-### 7. Run Database Setup
+### 6. Run Database Setup
 
 ```bash
-# Create database with schema and migrations
-uv run python setup_db.py create
-
-# Or reset database
-uv run python setup_db.py local
+uv run python setup_db.py create    # Create schema and run migrations
+uv run python setup_db.py local     # Reset database
 ```
-
-### 8. Update README.md
-
-Add database section to README.md.
-
-## Migration System
-
-Migrations are SQL files in `src/shared/db/scripts/migrations/` directory.
-
-### Naming Convention
-
-```
-NNN_description.sql
-```
-
-Examples:
-
-- `001_add_can_edit_users.sql`
-- `002_add_must_change_password.sql`
-
-### Migration File Format
-
-```sql
--- Migration: NNN_description
--- Brief description of what this migration does
-
-ALTER TABLE table_name ADD COLUMN column_name TYPE DEFAULT value;
-```
-
-### How Migrations Work
-
-1. Schema creation runs `create_schema.sql` first
-2. `run_migrations()` checks `migrations` table for applied migrations
-3. New migration files (sorted by name) are executed in order
-4. Each applied migration is recorded in `migrations` table
 
 ## Database Naming Convention
 
-**CRITICAL**: The SQLite database file MUST always be named `data.db`. Never use project-specific names like `pipeline.db` or `accounts.db`.
+**CRITICAL**: The SQLite database file MUST always be named `data.db`.
 
-## File Structure
+## Migration System
 
-After setup:
+Migrations are SQL files in the migrations subdirectory.
 
-### Single-Tenant
-
-```
-<project-root>/
-├── setup_db.py                    # Database setup script
-├── mcc/
-│   └── data/
-│       └── data.db                # SQLite database file
-├── src/
-│   └── shared/
-│       ├── common.py              # Path utilities
-│       └── db/
-│           ├── __init__.py
-│           ├── db_context.py      # Session manager
-│           └── scripts/
-│               ├── create_schema.sql
-│               ├── demo_data.sql
-│               └── migrations/
-│                   └── *.sql
-└── README.md
-```
-
-### Multitenant
-
-```
-<project-root>/
-├── setup_db.py                    # Database setup script
-├── mcc/
-│   └── domains/
-│       └── localhost/
-│           └── data.db            # Per-domain SQLite database
-├── src/
-│   └── shared/
-│       ├── common.py              # Domain path utilities
-│       └── db/
-│           ├── __init__.py
-│           ├── db_context.py      # Session manager (per-domain)
-│           └── scripts/
-│               ├── create_schema.sql
-│               ├── demo_data.sql
-│               └── migrations/
-│                   └── *.sql
-└── README.md
-```
+- **Naming**: `NNN_description.sql` (e.g., `001_add_can_edit_users.sql`)
+- **Execution**: Schema runs first, then migrations are applied in sorted order
+- **Tracking**: Each applied migration is recorded in the `migrations` table
 
 ## Commands
 
@@ -205,38 +113,10 @@ After setup:
 
 Multitenant mode adds `--domain` / `-d` flag to each command.
 
-## Data Directory
-
-### Single-Tenant
-
-The data directory defaults to `mcc/data` for local development. In production, set the `DATA_DIR` environment variable.
-
-```python
-def get_data_dir() -> Path:
-    data_dir = os.environ.get("DATA_DIR")
-    if data_dir:
-        return Path(data_dir)
-    return Path(__file__).parent.parent.parent.absolute() / "mcc" / "data"
-```
-
-### Multitenant
-
-Each domain has its own data directory under `mcc/domains/<domain>`.
-
-```python
-def get_directory_for_domain(domain: str) -> Path:
-    data_dir = os.environ.get("DATA_DIR")
-    if data_dir:
-        return Path(data_dir) / domain
-    return Path(__file__).parent.parent.parent.absolute() / "mcc" / "domains" / domain
-```
-
 ## Templates
 
-See `references/sqlite-setup.md` for:
-
-- Complete setup_db.py templates (both modes)
+See `resources/sqlite-setup.md` for complete templates:
+- setup_db.py (both tenancy modes)
 - DBContext classes (both modes)
 - Common utilities (both modes)
-- Schema templates
-- Migration patterns
+- Schema and migration patterns

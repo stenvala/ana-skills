@@ -28,7 +28,7 @@ Review recently modified code and apply simplifications that preserve functional
 - Ensure `ChangeDetectionStrategy.OnPush` is set
 - Use `inject()` not constructor injection
 - Imports must be `[CoreModule, MaterialModule, SharedModule]` (or without SharedModule for shared components)
-- No unusde import to files
+- No unused import to files
 
 ### Templates
 
@@ -38,7 +38,7 @@ Review recently modified code and apply simplifications that preserve functional
 
 ### SCSS
 
-- **Use global styles only**: All styling via classes from `src/ui/src/styles/` (`_layout.scss`, `_pages.scss`, `_cards.scss`, `_components.scss`, `_buttons.scss`, `_forms.scss`)
+- **Use global styles only**: All styling via classes from project-wide shared stylesheets (`_layout.scss`, `_pages.scss`, `_cards.scss`, `_components.scss`, `_buttons.scss`, `_forms.scss`)
 - **No custom SCSS**: Delete component `.scss` files unless explicitly requested
 - **No "nice" additions**: No shadows, borders, padding tweaks, or decorative styles unless asked, no `<i>` all of a sudden for single word
 - All lists tables, etc use shared scss
@@ -48,7 +48,7 @@ Review recently modified code and apply simplifications that preserve functional
 
 - Use `<shared-empty-state>` for empty states (not custom markup)
 - Use `<shared-loading-bar />` or `<shared-loading-spinner>` for loading
-- Check `src/ui/src/app/shared/components/` before creating new UI patterns
+- Check the shared components directory before creating new UI patterns
 - Extract repeated UI patterns into shared components
 
 ### Naming
@@ -94,8 +94,8 @@ Review recently modified code and apply simplifications that preserve functional
 
 ```bash
 # Frontend
-nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head -20
+source ~/.nvm/nvm.sh && nvm use 20.19.2 && cd <ui-dir> && npx ng build --configuration=development 2>&1 | head -20
 
 # Backend
-cd src && uv run python -c "from api.main import app; print('OK')"
+cd <project-src> && uv run python -c "from api.main import app; print('OK')"
 ```

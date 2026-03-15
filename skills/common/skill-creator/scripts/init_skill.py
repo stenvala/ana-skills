@@ -60,7 +60,7 @@ Delete this entire "Structuring This Skill" section when done - it's just guidan
 - Code samples for technical skills
 - Decision trees for complex workflows
 - Concrete examples with realistic user requests
-- References to scripts/templates/references as needed]
+- References to scripts/templates/resources as needed]
 
 ## Resources
 
@@ -77,7 +77,7 @@ Executable code (Python/Bash/etc.) that can be run directly to perform specific 
 
 **Note:** Scripts may be executed without loading into context, but can still be read by Claude for patching or environment adjustments.
 
-### references/
+### resources/
 Documentation and reference material intended to be loaded into context to inform Claude's process and thinking.
 
 **Examples from other skills:**
@@ -129,9 +129,9 @@ This is a placeholder for detailed reference documentation.
 Replace with actual reference content or delete if not needed.
 
 Example real reference docs from other skills:
-- product-management/references/communication.md - Comprehensive guide for status updates
-- product-management/references/context_building.md - Deep-dive on gathering context
-- bigquery/references/ - API references and query examples
+- product-management/resources/communication.md - Comprehensive guide for status updates
+- product-management/resources/context_building.md - Deep-dive on gathering context
+- bigquery/resources/ - API references and query examples
 
 ## When Reference Docs Are Useful
 
@@ -243,12 +243,12 @@ def init_skill(skill_name, path):
         example_script.chmod(0o755)
         print("✅ Created scripts/example.py")
 
-        # Create references/ directory with example reference doc
-        references_dir = skill_dir / 'references'
-        references_dir.mkdir(exist_ok=True)
-        example_reference = references_dir / 'api_reference.md'
+        # Create resources/ directory with example reference doc
+        resources_dir = skill_dir / 'resources'
+        resources_dir.mkdir(exist_ok=True)
+        example_reference = resources_dir / 'api_reference.md'
         example_reference.write_text(EXAMPLE_REFERENCE.format(skill_title=skill_title))
-        print("✅ Created references/api_reference.md")
+        print("✅ Created resources/api_reference.md")
 
         # Create assets/ directory with example asset placeholder
         assets_dir = skill_dir / 'assets'
@@ -264,7 +264,7 @@ def init_skill(skill_name, path):
     print(f"\n✅ Skill '{skill_name}' initialized successfully at {skill_dir}")
     print("\nNext steps:")
     print("1. Edit SKILL.md to complete the TODO items and update the description")
-    print("2. Customize or delete the example files in scripts/, references/, and assets/")
+    print("2. Customize or delete the example files in scripts/, resources/, and assets/")
     print("3. Run the validator when ready to check the skill structure")
 
     return skill_dir

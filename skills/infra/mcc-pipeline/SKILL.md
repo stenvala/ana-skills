@@ -16,7 +16,7 @@ Shared utility **`mcc_common.py`** must exist in both locations. Copy from `scri
 
 **Critical rule**: Only contents of `output/` are available at deploy time. The deploy script, its dependencies, config files, migration scripts - everything must be copied to `output/` during build.
 
-**Permission model**: The deploy script runs as `stenvala` (DIR_GROUP — directory owner). Services (nginx, backend daemons) run as `www-data` (DIR_USER — execution user). `stenvala` cannot edit systemd unit files or nginx configs — only restart existing services via `sudo /bin/systemctl restart <service>` (visudo-allowed). Files are owned `DIR_USER:DIR_GROUP` with group rw. Service definitions and nginx configs must be set up separately.
+**Permission model**: The deploy script runs as `DIR_GROUP` (directory owner). Services (nginx, backend daemons) run as `DIR_USER` (execution user). `DIR_GROUP` cannot edit systemd unit files or nginx configs — only restart existing services via `sudo /bin/systemctl restart <service>` (visudo-allowed). Files are owned `DIR_USER:DIR_GROUP` with group rw. Service definitions and nginx configs must be set up separately.
 
 ## Build Script Workflow
 
@@ -26,7 +26,7 @@ Shared utility **`mcc_common.py`** must exist in both locations. Copy from `scri
 4. Copy backend source to `output/`
 5. Copy all deployment-time files to `output/`
 
-See [references/build-patterns.md](references/build-patterns.md) for complete examples and patterns.
+See [resources/build-patterns.md](resources/build-patterns.md) for complete examples and patterns.
 
 ## Deploy Script Workflow
 
@@ -45,7 +45,7 @@ See [references/build-patterns.md](references/build-patterns.md) for complete ex
    - Cleanup old versions
    - Run smoke tests
 
-See [references/deploy-patterns.md](references/deploy-patterns.md) for complete examples and patterns.
+See [resources/deploy-patterns.md](resources/deploy-patterns.md) for complete examples and patterns.
 
 ## Configuration Files
 
@@ -53,7 +53,7 @@ See [references/deploy-patterns.md](references/deploy-patterns.md) for complete 
 - **`conf-{stage}.yml`** - Per-stage config: server connection, file ownership, services, domains, backup settings.
 - **`build_info.yml`** - Created by MCC pipeline service at project root before build. Copy to `output/` for deploy-time reference.
 
-See [references/deploy-patterns.md](references/deploy-patterns.md) for full schemas and examples.
+See [resources/deploy-patterns.md](resources/deploy-patterns.md) for full schemas and examples.
 
 ## Key Decisions
 
@@ -74,5 +74,5 @@ See [references/deploy-patterns.md](references/deploy-patterns.md) for full sche
 ## Resources
 
 - **`scripts/mcc_common.py`** - Copy this to project root. Required by both build and deploy scripts.
-- **[references/build-patterns.md](references/build-patterns.md)** - Build script examples and patterns.
-- **[references/deploy-patterns.md](references/deploy-patterns.md)** - Deploy script examples, migration patterns, cron deployment, non-deployment stages.
+- **[resources/build-patterns.md](resources/build-patterns.md)** - Build script examples and patterns.
+- **[resources/deploy-patterns.md](resources/deploy-patterns.md)** - Deploy script examples, migration patterns, cron deployment, non-deployment stages.

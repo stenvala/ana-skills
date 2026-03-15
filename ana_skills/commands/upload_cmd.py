@@ -84,23 +84,17 @@ def _upload_skill(
             return
 
         dest_dir = SKILLS_DIR / family / skill_name
-        dest_dir.mkdir(parents=True, exist_ok=True)
+        # Remove old skill dir completely and copy everything fresh
+        if dest_dir.exists():
+            shutil.rmtree(dest_dir)
+        shutil.copytree(src_dir, dest_dir)
 
-        # Copy SKILL.md
-        src_md = src_dir / "SKILL.md"
-        if src_md.exists():
-            content = src_md.read_text(encoding="utf-8")
+        # Normalize SKILL.md ending
+        dest_md = dest_dir / "SKILL.md"
+        if dest_md.exists():
+            content = dest_md.read_text(encoding="utf-8")
             content = _normalize_markdown_ending(content)
-            (dest_dir / "SKILL.md").write_text(content, encoding="utf-8")
-
-        # Copy subdirectories (references/, scripts/)
-        for subdir_name in ("references", "scripts"):
-            src_sub = src_dir / subdir_name
-            if src_sub.exists() and any(src_sub.iterdir()):
-                dest_sub = dest_dir / subdir_name
-                if dest_sub.exists():
-                    shutil.rmtree(dest_sub)
-                shutil.copytree(src_sub, dest_sub)
+            dest_md.write_text(content, encoding="utf-8")
 
     console.print(f"  [green]Uploaded[/green] {skill_name} → {family}/{skill_name}")
 

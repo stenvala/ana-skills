@@ -12,7 +12,6 @@ Create store services using base stores for key-based signal storage.
 - Adding state management for a new feature
 - Creating stores to cache API responses
 - Implementing reactive data patterns with signals
-- Managing collections or single objects by key
 
 ## Prerequisites
 
@@ -21,17 +20,26 @@ Create store services using base stores for key-based signal storage.
 
 ## File Location
 
-`src/ui/src/app/features/<feature>/services/<feature>-<optional-kind>.store.ts`
+Create store in the feature's `services/` directory, named `<feature>-<optional-kind>.store.ts`.
+
+## Scaffolding Script
+
+```bash
+uv run .claude/skills/frontend-store/scripts/init_frontend_store.py <feature>
+```
 
 ## Instructions
 
 1. Choose appropriate store type(s) based on data needs
-2. Create store service using templates from `references/store-templates.md`
-3. Verify build: `nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head -20`
+2. Create store service using templates from `resources/store-templates.md`
+3. Verify build:
+   ```bash
+   source ~/.nvm/nvm.sh && nvm use 20.19.2 && cd src/ui && npx ng build --configuration=development 2>&1 | head -20
+   ```
 
 ## Available Base Stores
 
-Located at `src/ui/src/app/core/base-store/`:
+Located in the core base-store module:
 
 | Store                      | Purpose                        | Example Use       |
 | -------------------------- | ------------------------------ | ----------------- |
@@ -42,68 +50,29 @@ Located at `src/ui/src/app/core/base-store/`:
 
 ## Recommended Patterns
 
-### Pattern 1: Paginated List + Detail Store — PREFERRED for paginated data
-
-Use when the API returns paginated results with total counts and you have separate list/detail views.
-
-```typescript
-@Injectable({ providedIn: 'root' })
-export class FeatureStoreService {
-  readonly itemsStore = new ListStore<FeatureDTO>();         // Lists by composite key (e.g., "repoId:status:offset")
-  readonly totalStore = new ObjectStore<number>();            // Totals by key WITHOUT offset (e.g., "repoId:status")
-  readonly itemStore = new ObjectStore<FeatureDetailDTO>();   // Full items by ID
-}
-```
-
-The **service** defines helper functions for composite cache keys — not the store.
+### Pattern 1: Paginated List + Detail Store
+Use when API returns paginated results with total counts and you have separate list/detail views. Uses `ListStore` for lists, `ObjectStore` for totals and individual items.
 
 ### Pattern 2: Non-Paginated List + Detail Store
-
-Use when all items are loaded at once (no server-side pagination, small collections). Uses `ALL_KEY = 'all'` in the service.
-
-```typescript
-@Injectable({ providedIn: 'root' })
-export class FeatureStoreService {
-  readonly itemsStore = new ListStore<FeatureDTO>();          // All items under 'all' key
-  readonly itemStore = new ObjectStore<FeatureDTO>();          // Individual items by ID
-}
-```
+Use when all items are loaded at once (small collections). Uses `ALL_KEY = 'all'` in the service, `ListStore` for items, `ObjectStore` for individual items.
 
 ### Pattern 3: Simple ListStore
+For simple resources loaded all at once with no separate detail view.
 
-For simple resources loaded all at once with no separate detail view:
-
-```typescript
-@Injectable({ providedIn: 'root' })
-export class FeatureStoreService {
-  readonly itemsStore = new ListStore<FeatureDTO>();
-}
-```
-
-### When to add more stores
-
-Add additional `ObjectStore` instances for related data loaded separately:
-
-```typescript
-@Injectable({ providedIn: 'root' })
-export class FeatureStoreService {
-  readonly itemsStore = new ListStore<FeatureDTO>();
-  readonly totalStore = new ObjectStore<number>();
-  readonly itemStore = new ObjectStore<FeatureDetailDTO>();
-  readonly logContentStore = new ObjectStore<string>();    // Logs loaded separately
-}
-```
+### When to Add More Stores
+Add additional `ObjectStore` instances for related data loaded separately (e.g., logs, metrics).
 
 ## Key Rules
 
 1. **Pure data container**: NO wrapper methods. Services access store instances directly
 2. **Use base stores**: Choose appropriate store type for your data
-3. **Key-based access**: Stores use string keys (e.g., parentId, composite keys) to organize data
+3. **Key-based access**: Stores use string keys to organize data
 4. **Null = not loaded**: `get(key)` returns `Signal<T | null>` — null means not yet loaded
 5. **Invalidation**: Use store's `clear()` or `remove(key)` methods directly from the service
-6. **Multiple stores**: A single store service can (and should) hold multiple store instances for different data types
-7. **Composite keys**: For paginated/filtered data, the service builds composite string keys — the store doesn't know about the key structure
+6. **Composite keys**: For paginated/filtered data, the service builds composite string keys — the store doesn't know about key structure
 
-## Reference
+## Resources
 
-See `references/store-templates.md` for complete implementation examples with all patterns and the full Store API reference.
+| Resource | Contents |
+|----------|----------|
+| `resources/store-templates.md` | Complete implementation examples for all patterns and the full Store API reference |

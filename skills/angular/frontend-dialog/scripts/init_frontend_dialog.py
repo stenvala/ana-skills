@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 
-TEMPLATE_FILE = Path(__file__).parent.parent / "references" / "dialog-template.md"
+TEMPLATE_FILE = Path(__file__).parent.parent / "resources" / "dialog-template.md"
 
 
 def to_pascal_case(kebab_name: str) -> str:

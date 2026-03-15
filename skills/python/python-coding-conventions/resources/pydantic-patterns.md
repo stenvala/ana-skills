@@ -103,6 +103,40 @@ class ItemService:
         )
 ```
 
+## Optional and Sensitive Fields
+
+```python
+class UserDTO(BaseDTO):
+    id: str = Field(...)
+    username: str = Field(...)
+    bio: Optional[str] = Field(default=None, description="User bio")
+
+# Full model (database layer)
+class User(SQLModel, table=True):
+    id: str
+    username: str
+    password_hash: str  # Never expose this
+    email: str
+
+# Full DTO for internal services (password_hash excluded)
+class UserDTO(BaseDTO):
+    id: str
+    username: str
+    email: str
+
+# Safe DTO for public APIs (email also excluded)
+class SafeUserDTO(BaseDTO):
+    id: str
+    username: str
+```
+
+## When to Create New DTOs
+
+- Returning data from functions/methods
+- Request bodies for API endpoints
+- Response bodies for API endpoints
+- Dependency injection returns
+
 ## Generic Service Pattern
 
 ```python
@@ -140,7 +174,7 @@ class UserService(BaseService[UserDTO]):
 
 ## Anti-Patterns to Avoid
 
-### ❌ Returning Dicts
+### Returning Dicts
 ```python
 # WRONG: Untyped dict return
 def get_user(user_id: str) -> dict:
@@ -148,14 +182,14 @@ def get_user(user_id: str) -> dict:
     return {"id": user.id, "name": user.name}
 ```
 
-### ❌ Returning Database Models
+### Returning Database Models
 ```python
 # WRONG: Exposing database model
 def get_user(user_id: str) -> UserModel:
     return db.get_user(user_id)
 ```
 
-### ❌ Mixing Models and DTOs
+### Mixing Models and DTOs
 ```python
 # WRONG: Inconsistent types
 def process_user(user: UserDTO) -> UserModel:
@@ -163,7 +197,7 @@ def process_user(user: UserDTO) -> UserModel:
     return UserModel(**user.model_dump())
 ```
 
-### ❌ Untyped Lists
+### Untyped Lists
 ```python
 # WRONG: List without type parameter
 def list_users() -> list:
@@ -185,7 +219,7 @@ def test_auth_service_validate_session():
 
     result = service.validate_session("valid-session-id")
 
-    # ✅ Result is strongly typed
+    # Result is strongly typed
     assert isinstance(result, SafeUserDTO)
     assert result.id == "user-123"
     assert result.username == "john"
@@ -208,14 +242,14 @@ def get_current_user(
     user: SafeUserDTO = Depends(get_current_user),
 ) -> SafeUserDTO:
     """Get current user. FastAPI handles JSON serialization."""
-    return user  # ✅ Type safe, auto-documented in OpenAPI
+    return user  # Type safe, auto-documented in OpenAPI
 
 # Response model automatically validates and serializes
 @app.get("/users/{user_id}")
 def get_user(
     user_id: str,
     service: UserService = Depends(get_user_service),
-) -> UserDTO:  # ✅ FastAPI validates response matches UserDTO
+) -> UserDTO:  # FastAPI validates response matches UserDTO
     """Get user by ID."""
     return service.get_by_id(user_id)
 ```

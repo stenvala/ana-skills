@@ -17,13 +17,14 @@ Create Playwright E2E tests using the Page Object pattern for maintainability an
 ## Prerequisites
 
 1. Feature fully implemented and manually tested
-2. Angular frontend running on configured port
-3. Backend API running
+2. Frontend and backend running
 
 ## Directory Structure
 
+E2E tests follow this layout inside the project test directory:
+
 ```
-src/tests/e2e/
+e2e/
 ├── conftest.py                    # Pytest fixtures
 ├── pages/                         # Page objects
 │   ├── base_page.py              # Base class for all pages
@@ -43,7 +44,7 @@ src/tests/e2e/
 
 ### 1. Create Base Infrastructure (first time only)
 
-If this is a fresh project, create the base infrastructure following `references/base-infrastructure.md`:
+If this is a fresh project, create the base infrastructure following `resources/base-infrastructure.md`:
 - `base_page.py` - Base class with common methods
 - `conftest.py` - Pytest fixtures for browser, database
 - `screenshot_on_failure.py` - Artifact capture utilities
@@ -51,22 +52,24 @@ If this is a fresh project, create the base infrastructure following `references
 ### 2. Create Page Object
 
 Create page object class extending `BasePage` with selectors and methods.
+See `resources/page-object-template.md` for patterns.
 
 ### 3. Create Test File
 
 Create async test using page objects with artifact capture.
+See `resources/test-template.md` for patterns.
 
 ### 4. Run Tests
 
 ```bash
 # Run specific test
-uv run pytest src/tests/e2e/tests/<feature>/test_<scenario>.py -v
+uv run pytest <e2e-tests-dir>/tests/<feature>/test_<scenario>.py -v
 
 # Run all e2e tests
-uv run pytest src/tests/e2e/ -v -m e2e
+uv run pytest <e2e-tests-dir>/ -v -m e2e
 
 # Run with visible browser (debug)
-uv run pytest src/tests/e2e/ -v --headed
+uv run pytest <e2e-tests-dir>/ -v --headed
 ```
 
 ## Key Rules
@@ -79,9 +82,8 @@ uv run pytest src/tests/e2e/ -v --headed
 6. **Artifact capture**: Use `run_with_screenshot_on_failure` wrapper for debugging
 7. **Database fixtures**: Use repositories to set up test data, not API calls
 
-## Templates
+## Resources
 
-See `references/` folder for:
-- `base-infrastructure.md` - Base page class, conftest fixtures, utilities
-- `page-object-template.md` - Page object class patterns
-- `test-template.md` - Test file structure and patterns
+- `resources/base-infrastructure.md` - Base page class, conftest fixtures, utilities
+- `resources/page-object-template.md` - Page object class patterns
+- `resources/test-template.md` - Test file structure and patterns

@@ -9,12 +9,12 @@ Edit SQLite schema to implement data model designs.
 
 ## Prerequisites
 
-Database design must exist in `docs/datamodels/<domain>.md` (use `/database-design` first).
+Database design must exist in the data model documentation directory (use `/database-design` first).
 
 ## File Locations
 
-- **Schema file**: `src/shared/db/scripts/create_schema.sql`
-- **Migrations**: `src/shared/db/scripts/migrations/NNN_description.sql`
+- **Schema file**: The main schema SQL file in the database scripts directory
+- **Migrations**: Numbered SQL files in the migrations subdirectory
 
 ## Instructions
 
@@ -56,94 +56,11 @@ SQLite limitations for migrations:
 
 ## Migration Examples
 
-### Simple Column Addition (001, 008, 008b)
-
-Add new columns with optional index:
-
-```sql
--- Migration: 001_add_document_reference_number.sql
--- Purpose: Store invoice/receipt reference numbers
-
-ALTER TABLE document ADD COLUMN reference_number TEXT;
-
-CREATE INDEX IF NOT EXISTS idx_document_reference ON document(reference_number);
-```
-
-```sql
--- Migration: 008_add_document_invoice_fields.sql
--- Feature: 008-document-detail-ui
-
-ALTER TABLE document ADD COLUMN invoice_number TEXT;
-ALTER TABLE document ADD COLUMN invoice_date DATE;
-ALTER TABLE document ADD COLUMN due_date DATE;
-```
-
-```sql
--- Migration: 008b_workflow_colors_and_statuses.sql
--- Description: Add color and is_final fields to workflow_stage table
-
-ALTER TABLE workflow_stage ADD COLUMN color TEXT(7) DEFAULT '#6B7280';
-ALTER TABLE workflow_stage ADD COLUMN is_final INTEGER NOT NULL DEFAULT 0;
-```
-
-### Complex Migration - Table Restructure (006)
-
-When removing columns or changing constraints, use the copy-and-replace pattern:
-
-```sql
--- Migration: 006_storage_path_refactor.sql
--- Purpose: Remove file_path and is_virtual columns from document table
-
--- Step 1: Create new table without unwanted columns
-CREATE TABLE document_new (
-    id TEXT PRIMARY KEY,
-    fiscal_year_id TEXT NOT NULL,
-    workflow_stage_id TEXT NOT NULL,
-    type TEXT NOT NULL,
-    -- ... other columns ...
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (fiscal_year_id) REFERENCES fiscal_year(id),
-    FOREIGN KEY (workflow_stage_id) REFERENCES workflow_stage(id)
-);
-
--- Step 2: Copy data (excluding removed columns)
-INSERT INTO document_new
-SELECT id, fiscal_year_id, workflow_stage_id, type, /* ... */
-FROM document;
-
--- Step 3: Drop old table
-DROP TABLE document;
-
--- Step 4: Rename new table
-ALTER TABLE document_new RENAME TO document;
-
--- Step 5: Recreate indexes
-CREATE INDEX IF NOT EXISTS ix_document_fiscal_year_id ON document(fiscal_year_id);
-CREATE INDEX IF NOT EXISTS ix_document_workflow_stage_id ON document(workflow_stage_id);
-```
-
-### Creating New Tables (006)
-
-```sql
--- Create new table with constraints
-CREATE TABLE bank_statement (
-    id TEXT PRIMARY KEY,
-    fiscal_year_id TEXT NOT NULL,
-    bank_account_id TEXT NOT NULL,
-    month INTEGER NOT NULL CHECK(month >= 1 AND month <= 12),
-    year INTEGER NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
-    FOREIGN KEY (fiscal_year_id) REFERENCES fiscal_year(id),
-    FOREIGN KEY (bank_account_id) REFERENCES bank_account(id),
-    CONSTRAINT uq_bank_statement_account_period UNIQUE (bank_account_id, month, year)
-);
-
--- Create indexes for foreign keys
-CREATE INDEX IF NOT EXISTS ix_bank_statement_fiscal_year_id ON bank_statement(fiscal_year_id);
-CREATE INDEX IF NOT EXISTS ix_bank_statement_bank_account_id ON bank_statement(bank_account_id);
-```
+See `resources/schema-examples.md` for detailed examples including:
+- Simple column additions with indexes
+- Complex table restructures (copy-and-replace pattern)
+- Creating new tables with constraints
+- JSON fields, composite indexes, unique constraints
 
 ## Testing Migrations
 
@@ -160,3 +77,8 @@ uv run setup_db.py local-update
 - Use format: `NNN_description.sql` (e.g., `001_add_document_reference_number.sql`)
 - Use suffixes for related migrations: `008_..., 008b_..., 008c_...`
 - Always include header comment with purpose/feature reference
+
+## Templates
+
+See `resources/` folder for:
+- `schema-examples.md` - Table creation and migration examples

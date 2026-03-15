@@ -19,91 +19,65 @@ Create Angular Material dialog components following the static open pattern with
 1. Feature module/structure exists
 2. Required services available for business logic
 
-## File Location
-
-`src/ui/src/app/features/<feature>/components/<feature>-dialog-<name>/<feature>-dialog-<name>.component.ts`
-
 ## Naming Convention
 
-- **Component class**: `<Feature>Dialog<Name>Component` (e.g., `AccountingDialogEditBankAccountComponent`)
-- **Selector**: `<feature>-dialog-<name>` (e.g., `accounting-dialog-edit-bank-account`)
+- **Component class**: `<Feature>Dialog<Name>Component`
+- **Selector**: `<feature>-dialog-<name>`
 - **Input interface**: `<Feature>Dialog<Name>InputData`
 - **Output interface**: `<Feature>Dialog<Name>OutputData`
-- **Folder**: `<feature>-dialog-<name>/`
+- **Folder**: `<feature>-dialog-<name>/` inside the feature's components directory
 
-## Instructions
-
-### 1. Scaffold Dialog Component
-
-Run the init script to create the file structure:
+## Scaffolding Script
 
 ```bash
-python .claude/skills/frontend-dialog/scripts/init_frontend_dialog.py <feature> <dialog-name>
+uv run .claude/skills/frontend-dialog/scripts/init_frontend_dialog.py <feature> <dialog-name>
 ```
 
 Example:
 ```bash
-python .claude/skills/frontend-dialog/scripts/init_frontend_dialog.py accounting edit-bank-account
+uv run .claude/skills/frontend-dialog/scripts/init_frontend_dialog.py accounting edit-bank-account
 ```
 
-This generates:
-- `src/ui/src/app/features/<feature>/components/<feature>-dialog-<name>/<feature>-dialog-<name>.component.ts`
-- `src/ui/src/app/features/<feature>/components/<feature>-dialog-<name>/<feature>-dialog-<name>.component.html`
+This generates the component `.ts` and `.html` files in the feature's components directory.
 
-The generated skeleton uses Pattern B (service call inside dialog). See `references/dialog-template.md` for the complete pattern reference.
+## Instructions
 
-### 2. Complete the Component
-
-Fill in the generated TODOs:
-- Define InputData and OutputData interfaces
-- Define FormModel interface and form fields
-- Add validators to `form()`
-- Inject your feature service and `SharedNotificationService`
-- Implement save logic in `onSubmit` (Pattern B)
-- Add form fields to HTML template
-
-### 3. Export from Feature Index
-
-Add export to `src/ui/src/app/features/<feature>/components/index.ts`
-
-### 4. Verify Build
-
-```bash
-nvm use 20.19.2 && cd src/ui && ng build --configuration=development 2>&1 | head -20
-```
+1. **Scaffold**: Run the init script above
+2. **Complete the component**: Fill in generated TODOs (interfaces, form fields, validators, save logic)
+3. **Export**: Add export to the feature's `components/index.ts`
+4. **Verify build**:
+   ```bash
+   source ~/.nvm/nvm.sh && nvm use 20.19.2 && cd src/ui && npx ng build --configuration=development 2>&1 | head -20
+   ```
 
 ## Key Rules
 
 ### Interface Definitions
-1. **Always define both interfaces**: Even if one is empty, define `InputData` and `OutputData`
-2. **Input interface**: Contains all data needed to initialize the dialog
-3. **Output interface**: Contains the result data when dialog is confirmed
-4. **undefined return**: Dialog returns `undefined` when cancelled
+1. **Always define both**: `InputData` and `OutputData`, even if one is empty
+2. **undefined return**: Dialog returns `undefined` when cancelled
 
 ### Static Open Method
-5. **Static method signature**: `static async open(dialog: MatDialog, data: InputData): Promise<OutputData | undefined>`
-6. **Use firstValueFrom**: Convert `afterClosed()` observable to promise
-7. **Dialog config**: Pass width, position, and other config in the open method
+3. **Signature**: `static async open(dialog: MatDialog, data: InputData): Promise<OutputData | undefined>`
+4. **Use firstValueFrom**: Convert `afterClosed()` observable to promise
 
 ### Component Structure
-8. **OnPush change detection**: Always use `ChangeDetectionStrategy.OnPush`
-9. **Inject dependencies**: Use `inject()` for `MatDialogRef`, `MAT_DIALOG_DATA`, and services
-10. **Protected data**: Mark injected data as `protected` for template access
+5. **OnPush change detection**: Always `ChangeDetectionStrategy.OnPush`
+6. **Inject dependencies**: Use `inject()` for `MatDialogRef`, `MAT_DIALOG_DATA`, and services
+7. **Protected data**: Mark injected data as `protected` for template access
 
 ### Close Behavior
-11. **Cancel returns undefined**: Call `dialogRef.close()` without arguments
-12. **Submit returns data**: Call `dialogRef.close(outputData)` with typed result
-13. **Validate before close**: Only close with data after form validation passes
+8. **Cancel**: `dialogRef.close()` without arguments (returns undefined)
+9. **Submit**: `dialogRef.close(outputData)` with typed result after validation
 
 ### Module Imports
-14. **Use shared modules**: Always import `[CoreModule, MaterialModule, SharedModule, FormField]` for form dialogs or `[CoreModule, MaterialModule, SharedModule]` for simple dialogs — never import Mat\* modules individually
-15. **Dialog DI imports**: Import `MAT_DIALOG_DATA`, `MatDialogRef`, `MatDialog` as TypeScript value imports for dependency injection (not as module imports)
+10. **Use shared modules**: Import `[CoreModule, MaterialModule, SharedModule, FormField]` for form dialogs — never import Mat\* individually
+11. **Dialog DI imports**: Import `MAT_DIALOG_DATA`, `MatDialogRef`, `MatDialog` as TypeScript value imports
 
 ### Form Dialogs
-**IMPORTANT**: For dialogs with forms, use the `/frontend-forms` skill instead. That skill provides signal-based forms patterns with proper validation, button styling, and loading states.
+**IMPORTANT**: For dialogs with forms, use the `/frontend-forms` skill for signal-based form patterns.
 
-## Templates
+## Resources
 
-See `references/` folder for:
-
-- `dialog-template.md` - Dialog component pattern with forms
+| Resource | Contents |
+|----------|----------|
+| `resources/dialog-template.md` | Dialog component pattern with forms |

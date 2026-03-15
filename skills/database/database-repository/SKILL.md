@@ -16,13 +16,13 @@ Create repository classes that handle database operations using the repository p
 
 ## Prerequisites
 
-1. Database design exists in `docs/datamodels/<domain>.md`
-2. Schema exists in `src/shared/db/scripts/create_schema.sql`
-3. SQLModel class exists in `src/shared/db/models/<domain>_models/<table_name>.py`
+1. Database design exists in the data model documentation directory
+2. Schema exists in the database scripts directory
+3. SQLModel class exists in the models directory
 
 ## File Location
 
-Create repository at: `src/shared/db/repositories/<domain>_repository/<table_name>_repository.py`
+Create repository in the domain's repository directory, one file per table.
 
 ## Instructions
 
@@ -36,9 +36,7 @@ Add methods for common query patterns needed by services.
 
 ### 3. Verify Import
 
-```bash
-uv run python -c "from shared.db.repositories.<domain>_repository.<table_name>_repository import <TableName>Repository; print('OK')"
-```
+Verify the repository can be imported successfully from the repositories module.
 
 ## Key Rules
 
@@ -53,6 +51,6 @@ uv run python -c "from shared.db.repositories.<domain>_repository.<table_name>_r
 
 ## Templates
 
-See `references/` folder for:
+See `resources/` folder for:
 - `repository-template.md` - Basic repository structure
 - `query-patterns.md` - Common query patterns

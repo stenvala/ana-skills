@@ -19,7 +19,7 @@ equipped with procedural knowledge that no model can fully possess.
 1. Specialized workflows - Multi-step procedures for specific domains
 2. Tool integrations - Instructions for working with specific file formats or APIs
 3. Domain expertise - Company-specific knowledge, schemas, business logic
-4. Bundled resources - Scripts, references, and assets for complex and repetitive tasks
+4. Bundled resources - Scripts, resource docs, and assets for complex and repetitive tasks
 
 ## Core Principles
 
@@ -56,7 +56,7 @@ skill-name/
 │   └── Markdown instructions (required)
 └── Bundled Resources (optional)
     ├── scripts/          - Executable code (Python/Bash/etc.)
-    ├── references/       - Documentation intended to be loaded into context as needed
+    ├── resources/       - Documentation intended to be loaded into context as needed
     └── assets/           - Files used in output (templates, icons, fonts, etc.)
 ```
 
@@ -78,16 +78,15 @@ Executable code (Python/Bash/etc.) for tasks that require deterministic reliabil
 - **Benefits**: Token efficient, deterministic, may be executed without loading into context
 - **Note**: Scripts may still need to be read by Claude for patching or environment-specific adjustments
 
-##### References (`references/`)
+##### Resources (`resources/`)
 
 Documentation and reference material intended to be loaded as needed into context to inform Claude's process and thinking.
 
 - **When to include**: For documentation that Claude should reference while working
-- **Examples**: `references/finance.md` for financial schemas, `references/mnda.md` for company NDA template, `references/policies.md` for company policies, `references/api_docs.md` for API specifications
-- **Use cases**: Database schemas, API documentation, domain knowledge, company policies, detailed workflow guides
+- **Examples**: `resources/finance.md` for financial schemas, `resources/policies.md` for company policies, `resources/api_docs.md` for API specifications
 - **Benefits**: Keeps SKILL.md lean, loaded only when Claude determines it's needed
-- **Best practice**: If files are large (>10k words), include grep search patterns in SKILL.md
-- **Avoid duplication**: Information should live in either SKILL.md or references files, not both. Prefer references files for detailed information unless it's truly core to the skill—this keeps SKILL.md lean while making information discoverable without hogging the context window. Keep only essential procedural instructions and workflow guidance in SKILL.md; move detailed reference material, schemas, and examples to references files.
+- **Avoid duplication**: Information should live in either SKILL.md or resource files, not both. Prefer resource files for detailed information. Keep only essential procedural instructions in SKILL.md; move detailed reference material, schemas, and examples to resource files.
+- **All resource files must be referenced from SKILL.md** with a description of when to read them.
 
 ##### Assets (`assets/`)
 
@@ -150,7 +149,7 @@ For Skills with multiple domains, organize content by domain to avoid loading ir
 ```
 bigquery-skill/
 ├── SKILL.md (overview and navigation)
-└── reference/
+└── resources/
     ├── finance.md (revenue, billing metrics)
     ├── sales.md (opportunities, pipeline)
     ├── product.md (API usage, features)
@@ -164,7 +163,7 @@ Similarly, for skills supporting multiple frameworks or variants, organize by va
 ```
 cloud-deploy/
 ├── SKILL.md (workflow + provider selection)
-└── references/
+└── resources/
     ├── aws.md (AWS deployment patterns)
     ├── gcp.md (GCP deployment patterns)
     └── azure.md (Azure deployment patterns)
@@ -195,15 +194,15 @@ Claude reads REDLINING.md or OOXML.md only when the user needs those features.
 
 **Important guidelines:**
 
-- **Avoid deeply nested references** - Keep references one level deep from SKILL.md. All reference files should link directly from SKILL.md.
-- **Structure longer reference files** - For files longer than 100 lines, include a table of contents at the top so Claude can see the full scope when previewing.
+- **Avoid deeply nested resources** - Keep resources one level deep from SKILL.md. All resource files should link directly from SKILL.md.
+- **Structure longer resource files** - For files longer than 100 lines, include a table of contents at the top so Claude can see the full scope when previewing.
 
 ## Skill Creation Process
 
 Skill creation involves these steps:
 
 1. Understand the skill with concrete examples
-2. Plan reusable skill contents (scripts, references, assets)
+2. Plan reusable skill contents (scripts, resources, assets)
 3. Initialize the skill (run init_skill.py)
 4. Edit the skill (implement resources and write SKILL.md)
 5. Package the skill (run package_skill.py)
@@ -233,7 +232,7 @@ Conclude this step when there is a clear sense of the functionality the skill sh
 To turn concrete examples into an effective skill, analyze each example by:
 
 1. Considering how to execute on the example from scratch
-2. Identifying what scripts, references, and assets would be helpful when executing these workflows repeatedly
+2. Identifying what scripts, resources, and assets would be helpful when executing these workflows repeatedly
 
 Example: When building a `pdf-editor` skill to handle queries like "Help me rotate this PDF," the analysis shows:
 
@@ -248,9 +247,9 @@ Example: When designing a `frontend-webapp-builder` skill for queries like "Buil
 Example: When building a `big-query` skill to handle queries like "How many users have logged in today?" the analysis shows:
 
 1. Querying BigQuery requires re-discovering the table schemas and relationships each time
-2. A `references/schema.md` file documenting the table schemas would be helpful to store in the skill
+2. A `resources/schema.md` file documenting the table schemas would be helpful to store in the skill
 
-To establish the skill's contents, analyze each concrete example to create a list of the reusable resources to include: scripts, references, and assets.
+To establish the skill's contents, analyze each concrete example to create a list of the reusable resources to include: scripts, resource docs, and assets.
 
 ### Step 3: Initializing the Skill
 
@@ -263,14 +262,14 @@ When creating a new skill from scratch, always run the `init_skill.py` script. T
 Usage:
 
 ```bash
-scripts/init_skill.py <skill-name> --path <output-directory>
+uv run .claude/skills/skill-creator/scripts/init_skill.py <skill-name> --path <output-directory>
 ```
 
 The script:
 
 - Creates the skill directory at the specified path
 - Generates a SKILL.md template with proper frontmatter and TODO placeholders
-- Creates example resource directories: `scripts/`, `references/`, and `assets/`
+- Creates example resource directories: `scripts/`, `resources/`, and `assets/`
 - Adds example files in each directory that can be customized or deleted
 
 After initialization, customize or remove the generated SKILL.md and example files as needed.
@@ -283,18 +282,18 @@ When editing the (newly-generated or existing) skill, remember that the skill is
 
 Consult these helpful guides based on your skill's needs:
 
-- **Multi-step processes**: See references/workflows.md for sequential workflows and conditional logic
-- **Specific output formats or quality standards**: See references/output-patterns.md for template and example patterns
+- **Multi-step processes**: See resources/workflows.md for sequential workflows and conditional logic
+- **Specific output formats or quality standards**: See resources/output-patterns.md for template and example patterns
 
 These files contain established best practices for effective skill design.
 
 #### Start with Reusable Skill Contents
 
-To begin implementation, start with the reusable resources identified above: `scripts/`, `references/`, and `assets/` files. Note that this step may require user input. For example, when implementing a `brand-guidelines` skill, the user may need to provide brand assets or templates to store in `assets/`, or documentation to store in `references/`.
+To begin implementation, start with the reusable resources identified above: `scripts/`, `resources/`, and `assets/` files. Note that this step may require user input. For example, when implementing a `brand-guidelines` skill, the user may need to provide brand assets or templates to store in `assets/`, or documentation to store in `resources/`.
 
 Added scripts must be tested by actually running them to ensure there are no bugs and that the output matches what is expected. If there are many similar scripts, only a representative sample needs to be tested to ensure confidence that they all work while balancing time to completion.
 
-Any example files and directories not needed for the skill should be deleted. The initialization script creates example files in `scripts/`, `references/`, and `assets/` to demonstrate structure, but most skills won't need all of them.
+Any example files and directories not needed for the skill should be deleted. The initialization script creates example files in `scripts/`, `resources/`, and `assets/` to demonstrate structure, but most skills won't need all of them.
 
 #### Update SKILL.md
 
@@ -321,13 +320,8 @@ Write instructions for using the skill and its bundled resources.
 Once development of the skill is complete, it must be packaged into a distributable .skill file that gets shared with the user. The packaging process automatically validates the skill first to ensure it meets all requirements:
 
 ```bash
-scripts/package_skill.py <path/to/skill-folder>
-```
-
-Optional output directory specification:
-
-```bash
-scripts/package_skill.py <path/to/skill-folder> ./dist
+uv run .claude/skills/skill-creator/scripts/package_skill.py <path/to/skill-folder>
+uv run .claude/skills/skill-creator/scripts/package_skill.py <path/to/skill-folder> ./dist  # optional output dir
 ```
 
 The packaging script will:

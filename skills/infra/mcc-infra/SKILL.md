@@ -7,7 +7,14 @@ description: "Deploy server infrastructure (systemd services, nginx configs, SSL
 
 Manages server infrastructure for Python (FastAPI/Gunicorn) + Angular web applications on Linux servers. Handles systemd service definitions, nginx reverse proxy configuration, and SSL certificate management.
 
-**Relationship with mcc-pipeline**: The mcc-pipeline skill handles code deployment (build, deploy, migrations, cron jobs). This skill handles the infrastructure layer that mcc-pipeline runs on top of — systemd daemons and nginx configs that require root/sudo access to install. The deploy user (`DIR_GROUP`) cannot edit systemd unit files or nginx configs — only restart existing services.
+**Relationship with mcc-pipeline**: mcc-pipeline handles code deployment (build, deploy, migrations, cron jobs). This skill handles the infrastructure layer — systemd daemons and nginx configs that require root/sudo access.
+
+## Resources
+
+- [resources/api-service-template.md](resources/api-service-template.md) — API service (Gunicorn + Uvicorn)
+- [resources/worker-service-template.md](resources/worker-service-template.md) — Background worker service
+- [resources/nginx-template.md](resources/nginx-template.md) — Nginx reverse proxy with SSL
+- [resources/logging-infrastructure.md](resources/logging-infrastructure.md) — Log files, directory permissions, troubleshooting
 
 ## What Gets Deployed
 
@@ -20,132 +27,53 @@ Manages server infrastructure for Python (FastAPI/Gunicorn) + Angular web applic
 
 ## Template Placeholders
 
-Templates use `{{KEY}}` syntax. The deploy script renders them from `conf-{stage}.yml` values.
-
-| Placeholder | Source | Example |
-|-------------|--------|---------|
-| `{{REMOTE_BASE}}` | config | `/home/stenvala/live/pipeline` |
-| `{{API_SYMLINK}}` | config or `{{REMOTE_BASE}}/current-api` | `/home/stenvala/live/pipeline/current-api` |
-| `{{UI_SYMLINK}}` | config or `{{REMOTE_BASE}}/current-ui` | `/home/stenvala/live/pipeline/current-ui` |
-| `{{API_PORT}}` | config | `7326` |
-| `{{WORKERS}}` | config (default: `4`) | `4` |
-| `{{STAGE}}` | config | `prod` |
-| `{{DOMAIN}}` | config | `pipeline.mathcodingclub.com` |
-| `{{DOMAIN_SAFE}}` | derived (non-alphanum → `_`) | `pipeline_mathcodingclub_com` |
-| `{{DIR_USER}}` | config | `www-data` |
-| `{{DIR_GROUP}}` | config | `stenvala` |
-| `{{DATA_DIR}}` | config or `{{REMOTE_BASE}}/data` | `/home/stenvala/live/pipeline/data` |
-| `{{DESCRIPTION}}` | config `SERVICE_DESCRIPTION` or derived from service name | `Pipeline API Service` |
-| `{{WORKER_DESCRIPTION}}` | config or derived from worker service name | `Pipeline Worker Service` |
-| `{{LOG_LEVEL}}` | config (default: `INFO`) | `INFO` |
-
-## Templates
-
-- [references/api-service-template.md](references/api-service-template.md) — API service (Gunicorn + Uvicorn)
-- [references/worker-service-template.md](references/worker-service-template.md) — Background worker service
-- [references/nginx-template.md](references/nginx-template.md) — Nginx reverse proxy with SSL
+Templates use `{{KEY}}` syntax, rendered from `conf-{stage}.yml`. Key placeholders: `REMOTE_BASE`, `API_SYMLINK`, `UI_SYMLINK`, `API_PORT`, `WORKERS`, `STAGE`, `DOMAIN`, `DIR_USER`, `DIR_GROUP`, `DATA_DIR`, `LOG_LEVEL`, `DESCRIPTION`, `WORKER_DESCRIPTION`.
 
 ## Configuration (`conf-{stage}.yml`)
 
-Infrastructure-relevant fields from the shared config file (same file used by mcc-pipeline):
+See [resources/api-service-template.md](resources/api-service-template.md) for the full placeholder reference. Key fields:
 
 ```yaml
-# Server connection
-REMOTE_USER: stenvala
-REMOTE_HOST: mathcodingclub.com
-REMOTE_BASE: /home/stenvala/live/pipeline
-
-# File ownership
-DIR_USER: www-data        # runs nginx and API daemon
-DIR_GROUP: stenvala       # directory owner, runs worker daemon
-
-# Services
-SERVICE_NAME: mcc-pipeline.service
-WORKER_SERVICE_NAME: mcc-pipeline-worker.service  # optional, omit if no worker
-
-# Network
-API_PORT: 7326
-WORKERS: 4                # gunicorn workers (default: 4)
-
-# Domain — single domain
-DOMAIN: pipeline.mathcodingclub.com
-
-# Or multi-domain (each gets its own nginx config + SSL cert)
-# DOMAINS:
-#   - kirjanpito.mathcodingclub.com
-#   - kirjanpito.pyora-pojat.fi
-
-# SSL
-EMAIL: antti@stenvall.fi  # Let's Encrypt notifications
-
-# Optional
-STAGE: prod               # passed as env var to service
-LOG_LEVEL: INFO           # default: INFO
-DATA_DIR: "{{REMOTE_BASE}}/data"  # default: {{REMOTE_BASE}}/data
-SERVICE_DESCRIPTION: "Pipeline API Service"
-WORKER_DESCRIPTION: "Pipeline Worker Service"
+REMOTE_USER: deploy_user
+REMOTE_HOST: example.com
+REMOTE_BASE: /home/deploy_user/live/myapp
+DIR_USER: www-data          # runs nginx and API daemon
+DIR_GROUP: deploy_user      # directory owner, runs worker daemon
+SERVICE_NAME: myapp.service
+WORKER_SERVICE_NAME: myapp-worker.service  # optional
+API_PORT: 8000
+DOMAIN: myapp.example.com   # or DOMAINS: [...] for multi-domain
+EMAIL: admin@example.com    # Let's Encrypt notifications
 ```
 
-**Single vs multi-domain**: Set `DOMAIN` for a single domain, or `DOMAINS` for multiple. Each domain gets its own nginx config and SSL certificate. The nginx template is rendered once per domain.
-
-**Database and backup fields**: Fields like `BACKUP_ENABLED`, `BACKUP_PATH`, `BACKUP_RETENTION_DAILY`, `BACKUP_RETENTION_WEEKLY` are used by mcc-pipeline for backup cron jobs — not by this skill. They can coexist in the same config file.
-
-## Logging
-
-All logs go to `{{REMOTE_BASE}}/logs/`. See the backend-logger skill for detailed logging architecture.
-
-| Log file | Writer | Configured in |
-|----------|--------|---------------|
-| `access-gunicorn.log` | Gunicorn | API service `--access-logfile` |
-| `error-gunicorn.log` | Gunicorn | API service `--error-logfile` |
-| `api.log` | Application | `LOG_ROOT` env var via `get_file_logger("api")` |
-| `worker.log` | Application | `LOG_ROOT` env var via `get_file_logger("worker")` |
-| `access-nginx.log` | Nginx | Nginx `access_log` directive |
-| `error-nginx.log` | Nginx | Nginx `error_log` directive |
-
-The `LOG_ROOT` environment variable is set in both systemd service files to `{{REMOTE_BASE}}/logs`. The logs directory must be owned by `DIR_USER:DIR_GROUP` with `g+rw` so both the API (runs as `DIR_USER`) and worker (runs as `DIR_GROUP`) can write.
+**Single vs multi-domain**: Set `DOMAIN` for one domain, or `DOMAINS` for multiple. Each domain gets its own nginx config and SSL certificate.
 
 ## Directory Structure
 
 ```
 project/
 └── mcc/
-    ├── conf-prod.yml                  # stage config (shared with mcc-pipeline)
-    ├── conf-dev.yml                   # optional dev stage config
-    ├── config.yml                     # stage routing (used by mcc-pipeline)
-    ├── {SERVICE_NAME}                 # API service template (e.g. mcc-pipeline.service)
-    ├── {WORKER_SERVICE_NAME}          # worker service template (optional)
-    ├── nginx.template                 # nginx config template
-    └── deploy_server.py              # infrastructure deployment script
+    ├── conf-prod.yml              # stage config (shared with mcc-pipeline)
+    ├── config.yml                 # stage routing (used by mcc-pipeline)
+    ├── {SERVICE_NAME}             # API service template
+    ├── {WORKER_SERVICE_NAME}      # worker service template (optional)
+    ├── nginx.template             # nginx config template
+    └── deploy_server.py           # infrastructure deployment script
 ```
 
 ## Usage
 
-### Deploy infrastructure:
 ```bash
 cd mcc
 uv run deploy_server.py                         # uses conf.yml (default)
 uv run deploy_server.py --conf conf-prod.yml    # explicit config file
 ```
 
-### What it does:
-1. Prompts for sudo password
-2. Renders service template(s) with config values
-3. Uploads to `/etc/systemd/system/` via sudo
-4. Renders nginx template per domain with config values
-5. Uploads to `/etc/nginx/sites-available/`
-6. Generates SSL certificates via Certbot (first time only)
-7. Creates nginx `sites-enabled` symlinks
-8. Tests nginx config and restarts nginx
-9. Runs `systemctl daemon-reload`, enables and starts services
+The script: renders templates → uploads systemd/nginx configs → generates SSL certs (first time) → enables symlinks → restarts services.
 
-### Prerequisites:
-- SSH access to the server as `REMOTE_USER`
-- Sudo access for systemd and nginx operations
+### Prerequisites
+
+- SSH access as `REMOTE_USER` with sudo
 - Certbot installed on the server
 - Domain DNS pointing to the server
-- Python packages: `fabric`, `pyyaml` (add to project dependencies)
-
-### First-time vs update:
-- **First time**: Certbot generates new SSL certificates using standalone mode (stops nginx temporarily)
-- **Update**: Existing certificates are kept; only service/nginx configs are updated and services restarted
+- Python packages: `fabric`, `pyyaml`

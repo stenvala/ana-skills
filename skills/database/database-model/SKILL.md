@@ -16,17 +16,17 @@ Create SQLModel Python classes that map to database tables.
 
 ## Prerequisites
 
-1. Data model documentation exists in `docs/datamodels/<domain>.md` (MANDATORY - see `references/datamodel-docs-template.md`)
-2. Schema exists in `src/shared/db/scripts/create_schema.sql`
-3. Base infrastructure exists (use `references/base-infrastructure.md` for fresh projects)
+1. Data model documentation exists in the data model documentation directory (MANDATORY - see `resources/datamodel-docs-template.md`)
+2. Schema exists in the database scripts directory
+3. Base infrastructure exists (use `resources/base-infrastructure.md` for fresh projects)
 
-**IMPORTANT**: If documentation doesn't exist, create it first using `references/datamodel-docs-template.md` before proceeding with model implementation.
+**IMPORTANT**: If documentation doesn't exist, create it first using `resources/datamodel-docs-template.md` before proceeding with model implementation.
 
 ## File Locations
 
-- **Models**: `src/shared/db/models/<domain>_models/<table_name>.py`
-- **Enums**: `src/shared/db/models/<domain>_models/<domain>_enums.py`
-- **JSONB Types**: `src/shared/db/models/<domain>_models/<domain>_types.py`
+- **Models**: The domain models directory, one file per table
+- **Enums**: Enum file in the domain models directory
+- **JSONB Types**: Types file in the domain models directory
 
 ## Instructions
 
@@ -44,9 +44,7 @@ Define Pydantic models for JSONB field contents.
 
 ### 4. Verify Import
 
-```bash
-uv run python -c "from shared.db.models.<domain>_models.<table_name> import <TableName>; print('OK')"
-```
+Verify the model can be imported successfully from the models module.
 
 ## Key Rules
 
@@ -61,7 +59,7 @@ uv run python -c "from shared.db.models.<domain>_models.<table_name> import <Tab
 
 ## Templates
 
-See `references/` folder for:
+See `resources/` folder for:
 - `datamodel-docs-template.md` - **MANDATORY**: Data model documentation structure (create docs FIRST)
 - `base-infrastructure.md` - **Start here for fresh projects**: BaseDBModelMixin, package structure
 - `model-template.md` - Basic model structure

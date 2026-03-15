@@ -8,14 +8,14 @@ The deploy script runs on the remote server from within the build output directo
 
 ## Permission Model
 
-The deploy script runs as user `stenvala`. Key constraints:
+The deploy script runs as `DIR_GROUP` (directory owner user). Key constraints:
 
-- **Services (nginx, backend daemons) run as `www-data`** (DIR_USER), not `stenvala`
-- `stenvala` (DIR_GROUP) is the directory owner who owns `/home/stenvala/live`
-- `stenvala` **cannot** edit systemd unit files or nginx configs — these must be set up manually or via a separate privileged process
-- `stenvala` **can** restart services via visudo-allowed `sudo /bin/systemctl restart <service>`
-- `stenvala` **can** `chown` and `chmod` files within the deployment directory
-- Files are owned by `www-data:stenvala` (DIR_USER:DIR_GROUP) with group read/write so both the service and deploy user can access them
+- **Services (nginx, backend daemons) run as `DIR_USER`** (execution user), not `DIR_GROUP`
+- `DIR_GROUP` is the directory owner who owns the deployment base path
+- `DIR_GROUP` **cannot** edit systemd unit files or nginx configs — these must be set up manually or via a separate privileged process
+- `DIR_GROUP` **can** restart services via visudo-allowed `sudo /bin/systemctl restart <service>`
+- `DIR_GROUP` **can** `chown` and `chmod` files within the deployment directory
+- Files are owned by `DIR_USER:DIR_GROUP` with group read/write so both the service and deploy user can access them
 
 **mcc_deploy.py cannot deploy service definitions or nginx configs.** It can only deploy application code, run migrations, deploy cron jobs, and restart existing services.
 
@@ -58,13 +58,13 @@ deploy:
 
 ```yaml
 # Server connection
-REMOTE_USER: stenvala
+REMOTE_USER: deploy_user
 REMOTE_HOST: server.example.com
-REMOTE_BASE: /home/stenvala/live/myapp-prod
+REMOTE_BASE: /home/deploy_user/live/myapp-prod
 
 # File ownership
 DIR_USER: www-data # execution user: runs nginx and backend service daemons
-DIR_GROUP: stenvala # directory owner: the user who owns /home/stenvala/live
+DIR_GROUP: deploy_user # directory owner: the user who owns the deployment base
 
 # Services to restart (single service)
 SERVICE_NAME: myapp-prod.service
@@ -112,7 +112,7 @@ api_version_dir.mkdir(parents=True, exist_ok=True)
 Result on disk:
 
 ```
-/home/stenvala/live/myapp-prod/
+/home/deploy_user/live/myapp-prod/
   api/
     vrs-2026-02-27T143000/   # previous
     vrs-2026-02-27T150000/   # new
@@ -359,8 +359,8 @@ timestamp:
 branch: main
 commit_sha: 5807d5d45623363cc93902b99bb0a0991c77d8df
 committer:
-  name: Antti Stenvall
-  email: antti@stenvall.fi
+  name: Jane Doe
+  email: jane@example.com
   commit_message: Some git commit message
 ```
 

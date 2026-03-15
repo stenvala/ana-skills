@@ -26,8 +26,10 @@ Integration tests exercise the **complete stack** through API endpoints:
 
 ## File Structure
 
+Tests live in the integration test directory:
+
 ```
-src/tests/integration/
+integration/
 ├── conftest.py                           # Shared fixtures (auth_headers, accounting_prerequisites)
 ├── <feature_name>/
 │   ├── conftest.py                       # Feature-specific fixtures
@@ -36,83 +38,9 @@ src/tests/integration/
 
 ## Key Fixtures
 
-### `test_client` (from root conftest.py)
-FastAPI TestClient with test domain header set.
-
-### `auth_headers` (from integration conftest.py)
-```python
-@pytest.fixture(scope="session")
-def auth_headers(test_client: "TestClient") -> dict[str, str]:
-    """Login as admin and return authorization headers."""
-```
-
-### `accounting_prerequisites` (from integration conftest.py)
-```python
-@pytest.fixture(scope="session")
-def accounting_prerequisites(...) -> AccountingPrerequisites:
-    """Create workflow stage, dimension type, fiscal year, bank account."""
-```
-
-## Test Pattern
-
-```python
-"""Integration test for [feature description].
-
-Tests that [what the test verifies end-to-end].
-"""
-
-from pathlib import Path
-from typing import TYPE_CHECKING
-
-import pytest
-
-from tests.integration.conftest import AccountingPrerequisites
-
-if TYPE_CHECKING:
-    from fastapi.testclient import TestClient
-
-pytestmark = pytest.mark.integration
-
-
-def test_<descriptive_name>(
-    test_client: "TestClient",
-    auth_headers: dict[str, str],
-    accounting_prerequisites: AccountingPrerequisites,
-) -> None:
-    """[Describe what this test verifies].
-
-    Setup:
-    1. [What prerequisite data needs to be created]
-
-    Test:
-    1. [What API calls are made]
-    2. [What is verified]
-    """
-    # 1. Setup - create any test-specific data via API
-    response = test_client.post(
-        "/api/private/some-endpoint",
-        json={"field": "value"},
-        headers=auth_headers,
-    )
-    assert response.status_code == 201
-
-    # 2. Act - perform the main action being tested
-    result = test_client.post(
-        "/api/private/action-endpoint",
-        json={"data": "..."},
-        headers=auth_headers,
-    )
-    assert result.status_code == 200
-
-    # 3. Assert - verify the complete workflow worked
-    verify_response = test_client.get(
-        "/api/private/verify-endpoint",
-        headers=auth_headers,
-    )
-    assert verify_response.status_code == 200
-    data = verify_response.json()
-    assert data["expected_field"] == "expected_value"
-```
+- **`test_client`** - FastAPI TestClient with test domain header set
+- **`auth_headers`** - Login as admin and return authorization headers (session-scoped)
+- **`accounting_prerequisites`** - Create workflow stage, dimension type, fiscal year, bank account (session-scoped)
 
 ## Key Rules
 
@@ -127,46 +55,18 @@ def test_<descriptive_name>(
 ## What NOT to Test
 
 Integration tests verify the **system works correctly end-to-end**. Do NOT test:
-
-- Invalid input handling (unit tests)
-- Authentication failures (unit tests)
-- Authorization failures (unit tests)
-- Database constraint violations (unit tests)
-- Edge cases and error scenarios (unit tests)
+- Invalid input handling, authentication/authorization failures, database constraint violations, edge cases (all unit tests)
 
 ## Running Tests
 
 ```bash
 # Run all integration tests
-uv run pytest src/tests/integration/ -v -m integration
+uv run pytest <integration-tests-dir>/ -v -m integration
 
 # Run specific integration test
-uv run pytest src/tests/integration/feature/test_workflow.py -v
+uv run pytest <integration-tests-dir>/feature/test_workflow.py -v
 ```
 
-## Creating Feature-Specific Fixtures
+## Resources
 
-For tests that need additional setup beyond `accounting_prerequisites`:
-
-```python
-# src/tests/integration/my_feature/conftest.py
-"""Fixtures for my_feature integration tests."""
-
-from pathlib import Path
-import pytest
-
-@pytest.fixture
-def csv_file_path(tmp_path: Path) -> Path:
-    """Create test CSV file for import testing."""
-    csv_content = """header1,header2
-value1,value2"""
-    csv_file = tmp_path / "test.csv"
-    csv_file.write_text(csv_content)
-    return csv_file
-```
-
-## Templates
-
-See `references/` folder for:
-
-- `integration-test-example.py` - Complete integration test example
+- `resources/integration-test-example.py` - Complete integration test example with test pattern, fixture usage, and assertions
